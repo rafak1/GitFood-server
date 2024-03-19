@@ -36,7 +36,7 @@ public class HomeController : Controller
     [Route("/addRandomBarcode")]
     public async Task<IActionResult> AddRandomBarcode() 
     {
-        await _dbInfo.Barcodes.AddAsync(new Data.Models.Barcode{ BarcodeBytes = new byte[10], BarcodeNumber = "101010", Name = "dziwna rzecz"});
+        await _dbInfo.Barcodes.AddAsync(new Barcode{ BarcodeBytes = new byte[10], BarcodeNumber = "101010", Name = "dziwna rzecz"});
         await _dbInfo.SaveChangesAsync();
         return Ok();
     }
