@@ -6,18 +6,19 @@ using Server.Data.Models;
 namespace Server.Controllers;
 
 [ApiController]
-public class HomeController : Controller
+public class SecondController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly ILogger<SecondController> _logger;
     private readonly DataContext _dbInfo;
+    private const string ControllerPart = "secControler";
 
-    public HomeController(ILogger<HomeController> logger, DataContext database)
+    public SecondController(ILogger<SecondController> logger, DataContext database)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
     }
 
-    [Route("/addRandomBarcode")]
+    [Route($"{ControllerPart}/addRandomBarcode")]
     public async Task<IActionResult> AddRandomBarcode() 
     {
         await _dbInfo.Barcodes.AddAsync(new Barcode{ BarcodeBytes = new byte[10], BarcodeNumber = "101010", Name = "dziwna rzecz"});
@@ -27,7 +28,7 @@ public class HomeController : Controller
 
     
     [HttpPost]
-    [Route("/addBarcode")]
+    [Route($"{ControllerPart}/addBarcode")]
     public async Task<IActionResult> AddBarcode(BarcodeViewModel barcode) 
     {
         await _dbInfo.Barcodes.AddAsync(new Barcode
@@ -40,7 +41,7 @@ public class HomeController : Controller
         return Ok();
     }
 
-    [Route("/getBarcodes")]
+    [Route($"{ControllerPart}/getBarcodes")]
     public IActionResult GetBarcodes() 
     {
         return Ok(_dbInfo.Barcodes.ToArray());

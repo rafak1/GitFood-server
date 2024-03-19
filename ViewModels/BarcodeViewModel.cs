@@ -1,6 +1,6 @@
 
 
-namespace Server.Models;
+namespace Server.ViewModels;
 public class BarcodeViewModel 
 {
     public byte[] BarcodeBytes {get; set;}
