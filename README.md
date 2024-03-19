@@ -20,3 +20,8 @@ Dodanie nowej migracji (zmiany na sql)
 ```
 dotnet ef migrations add MIGRATIONNAME
 ```
+
+Uruchomienie serwera:
+```
+dotnet run
+```
