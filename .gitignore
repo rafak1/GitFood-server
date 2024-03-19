@@ -1,3 +1,4 @@
 /bin
 /obj/Debug
-appsettings.*
+appsettings.json
+appsettings.Development.json
