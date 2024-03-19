@@ -1,5 +1,3 @@
 /bin
 /obj/Debug
-/DatabaseFile
-/DatabaseFile/LocalDatabase.db
-/DatabaseFile/*.db
+appsettings.*
