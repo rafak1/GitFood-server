@@ -14,6 +14,12 @@ Dodanie nowej migracji (zmiany na sql)
 dotnet ef migrations add MIGRATIONNAME
 ```
 
+Uruchomienie serwera:
+```
+dotnet run
+```
+
+
 Dla frontendu i testów:
 
 Został wystawiony swagger gdzie możecie testować endpointy oraz zobaczyć ich dokumentacje/schematy, znajduje się on pod linkiem:
