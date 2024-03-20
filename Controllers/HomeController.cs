@@ -9,27 +9,18 @@ namespace Server.Controllers;
 [ApiController]
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private const string _controllerRoute = "/barcode";
+
     private readonly DataContext _dbInfo;
 
-    public HomeController(ILogger<HomeController> logger, DataContext database)
+    public HomeController(DataContext database)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
-    }
-
-    [HttpPatch]
-    [Route("/addRandomBarcode")]
-    public async Task<IActionResult> AddRandomBarcode() 
-    {
-        await _dbInfo.Barcodes.AddAsync(new Barcode{ BarcodeBytes = new byte[10], BarcodeNumber = "101010", Name = "dziwna rzecz"});
-        await _dbInfo.SaveChangesAsync();
-        return Ok();
     }
 
     
     [HttpPost]
-    [Route("/addBarcode")]
+    [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddBarcode(BarcodeViewModel barcode) 
     {
         await _dbInfo.Barcodes.AddAsync(new Barcode
@@ -43,14 +34,14 @@ public class HomeController : Controller
     }
 
     [HttpGet]
-    [Route("/getBarcodes")]
-    public IActionResult GetBarcodes() 
+    [Route($"{_controllerRoute}/get")]
+    public async Task<IActionResult> GetBarcode(string barcodeNumber) 
     {
-        return Ok(_dbInfo.Barcodes.ToArray());
+        return Ok(await _dbInfo.Barcodes.FirstOrDefaultAsync(x => x.BarcodeNumber == barcodeNumber));
     }
 
-    [HttpGet]
-    [Route("/deleteBarcode")]
+    [HttpDelete]
+    [Route($"{_controllerRoute}/delete")]
     public async Task<IActionResult> DeleteBarcode(string barcodeName) 
     {
         await _dbInfo.Barcodes.Where(x => x.BarcodeNumber == barcodeName).ExecuteDeleteAsync();
