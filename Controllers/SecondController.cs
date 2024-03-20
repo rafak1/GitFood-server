@@ -18,6 +18,7 @@ public class SecondController : Controller
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
     }
 
+    [HttpPatch]
     [Route($"{ControllerPart}/addRandomBarcode")]
     public async Task<IActionResult> AddRandomBarcode() 
     {
@@ -41,6 +42,7 @@ public class SecondController : Controller
         return Ok();
     }
 
+    [HttpGet]
     [Route($"{ControllerPart}/getBarcodes")]
     public IActionResult GetBarcodes() 
     {

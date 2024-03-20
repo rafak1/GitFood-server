@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Server.Data;
 using Server.ViewModels;
 using Server.Data.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Server.Controllers;
 
@@ -17,6 +18,7 @@ public class HomeController : Controller
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
     }
 
+    [HttpPatch]
     [Route("/addRandomBarcode")]
     public async Task<IActionResult> AddRandomBarcode() 
     {
@@ -40,9 +42,18 @@ public class HomeController : Controller
         return Ok();
     }
 
+    [HttpGet]
     [Route("/getBarcodes")]
     public IActionResult GetBarcodes() 
     {
         return Ok(_dbInfo.Barcodes.ToArray());
+    }
+
+    [HttpGet]
+    [Route("/deleteBarcode")]
+    public async Task<IActionResult> DeleteBarcode(string barcodeName) 
+    {
+        await _dbInfo.Barcodes.Where(x => x.BarcodeNumber == barcodeName).ExecuteDeleteAsync();
+        return Ok();
     }
 }
