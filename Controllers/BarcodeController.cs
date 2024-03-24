@@ -1,19 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
-using Server.Data;
 using Server.ViewModels;
-using Server.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Server.DataModel;
 
 namespace Server.Controllers;
 
 [ApiController]
-public class HomeController : Controller
+public class BarcodeController : Controller
 {
     private const string _controllerRoute = "/barcode";
 
-    private readonly DataContext _dbInfo;
+    private readonly GitfoodContext _dbInfo;
 
-    public HomeController(DataContext database)
+    public BarcodeController(GitfoodContext database)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
     }
@@ -25,9 +24,8 @@ public class HomeController : Controller
     {
         await _dbInfo.Barcodes.AddAsync(new Barcode
         {
-            BarcodeBytes = barcode.BarcodeBytes,
-            BarcodeNumber = barcode.BarcodeNumber,
-            Name = barcode.Name
+            Key = barcode.BarcodeNumber,
+            ProductId = barcode.ProductId
         });
         await _dbInfo.SaveChangesAsync();
         return Ok();
@@ -37,14 +35,14 @@ public class HomeController : Controller
     [Route($"{_controllerRoute}/get")]
     public async Task<IActionResult> GetBarcode(string barcodeNumber) 
     {
-        return Ok(await _dbInfo.Barcodes.FirstOrDefaultAsync(x => x.BarcodeNumber == barcodeNumber));
+        return Ok(await _dbInfo.Barcodes.FirstOrDefaultAsync(x => x.Key == barcodeNumber));
     }
 
     [HttpDelete]
     [Route($"{_controllerRoute}/delete")]
     public async Task<IActionResult> DeleteBarcode(string barcodeName) 
     {
-        await _dbInfo.Barcodes.Where(x => x.BarcodeNumber == barcodeName).ExecuteDeleteAsync();
+        await _dbInfo.Barcodes.Where(x => x.Key == barcodeName).ExecuteDeleteAsync();
         return Ok();
     }
 }

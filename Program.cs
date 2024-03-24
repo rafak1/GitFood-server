@@ -1,8 +1,8 @@
-using Server.Data;
+using Server.DataModel;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<DataContext>();
+builder.Services.AddSingleton<GitfoodContext>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
