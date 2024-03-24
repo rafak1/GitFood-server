@@ -23,8 +23,13 @@ public partial class GitfoodContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql(_configuration.GetConnectionString("WebApiDatabase"));
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
+    {
+        if(bool.TryParse(_configuration.GetSection("LocalConfig").GetSection("UseLocalDb").Value, out var useLocalDb) && useLocalDb)
+            optionsBuilder.UseSqlite(_configuration.GetConnectionString("LocalDb"));
+        else
+            optionsBuilder.UseNpgsql(_configuration.GetConnectionString("WebApiDatabase"));
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

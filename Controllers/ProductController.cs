@@ -33,14 +33,15 @@ public class ProductController : Controller
     [Route($"{ControllerPart}/get")]
     public IActionResult GetProduct(string name) 
     {
-        return Ok(_dbInfo.Products.Where(x => x.Name.Contains(name)));
+        var result = _dbInfo.Products.Where(x => x.Name.Contains(name));
+        return Ok(GetProductsAllInfo(result));
     }
 
     [HttpGet]
     [Route($"{ControllerPart}/getById")]
     public IActionResult GetProductById(int id) 
     {
-        return Ok(_dbInfo.Products.Where(x => x.Id == id));
+        return Ok(GetProductsAllInfo(_dbInfo.Products.Where(x => x.Id == id)));
     }
 
     [HttpDelete]
@@ -59,9 +60,36 @@ public class ProductController : Controller
         _dbInfo.Products.Update(product);
         if(product is null || model.CategoriesIds is null)
             return BadRequest();
-        product.Categories.AddRange(model.CategoriesIds.Select(x => new Category(){ Id = x }));
+        product.Categories.AddRange(_dbInfo.Categories.Where(x => model.CategoriesIds.Contains(x.Id)));
         await _dbInfo.SaveChangesAsync();
         return Ok();
+    }
+
+    private IQueryable<ProductWithCategoryAndBarcodeViewModel> GetProductsAllInfo(IQueryable<Product> products) 
+    {
+        return products.Select(x => new ProductWithCategoryAndBarcodeViewModel() {
+            Product = new IdExtendedViewModel<ProductViewModel>() {
+                Id = x.Id,
+                InnerInformation = new ProductViewModel() {
+                    Name = x.Name,
+                    Description = x.Description
+                }
+            },
+            Categories = x.Categories.Select(x => 
+                new IdExtendedViewModel<CategoryViewModel>() {
+                    Id = x.Id,
+                    InnerInformation = new CategoryViewModel() {
+                        Name = x.Name
+                    }
+                }
+            ).ToArray(),
+            Barcodes = x.Barcodes.Select(x => 
+                new BarcodeViewModel() {
+                    BarcodeNumber = x.Key,
+                    ProductId = x.ProductId.Value
+                }
+            ).ToArray()
+        });
     }
 
 }
