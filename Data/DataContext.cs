@@ -14,8 +14,8 @@ public class DataContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        // connect to sqlite database
-        options.UseSqlite(Configuration.GetConnectionString("WebApiDatabase"));
+        // connect to psql database
+        options.UseNpgsql(Configuration.GetConnectionString("WebApiDatabase"));
     }
 
     public DbSet<Barcode> Barcodes { get; set; }
