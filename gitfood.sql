@@ -6,7 +6,7 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS public.barcodes
 (
     key character varying COLLATE pg_catalog."default" NOT NULL,
-    product_id numeric,
+    product_id integer,
     CONSTRAINT "Barcode_pkey" PRIMARY KEY (key)
 );
 
@@ -15,7 +15,7 @@ ALTER TABLE IF EXISTS public.barcodes
 
 CREATE TABLE IF NOT EXISTS public.products
 (
-    "Id" serial NOT NULL DEFAULT nextval('"Products_Id_seq"'::regclass),
+    "Id" serial NOT NULL,
     description character varying COLLATE pg_catalog."default",
     name character varying COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT "Products_pkey" PRIMARY KEY ("Id")
