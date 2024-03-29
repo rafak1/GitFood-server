@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.categories
 
 ALTER TABLE IF EXISTS public.barcodes
     ADD CONSTRAINT "Barcode_ProductId_fkey" FOREIGN KEY (product_id)
-    REFERENCES public.products ("Id") MATCH SIMPLE
+    REFERENCES public.products ("Id") 
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
