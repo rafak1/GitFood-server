@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS public.barcodes
 (
     key character varying COLLATE pg_catalog."default" NOT NULL,
     product_id integer,
+    "user" character varying,
     CONSTRAINT "Barcode_pkey" PRIMARY KEY (key)
 );
 
@@ -15,10 +16,10 @@ ALTER TABLE IF EXISTS public.barcodes
 
 CREATE TABLE IF NOT EXISTS public.products
 (
-    "Id" serial NOT NULL,
+    id serial NOT NULL,
     description character varying COLLATE pg_catalog."default",
     name character varying COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT "Products_pkey" PRIMARY KEY ("Id")
+    CONSTRAINT "Products_pkey" PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public.products_categories
@@ -35,9 +36,24 @@ CREATE TABLE IF NOT EXISTS public.categories
     PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS public.users
+(
+    login character varying NOT NULL,
+    password character varying NOT NULL,
+    PRIMARY KEY (login)
+);
+
 ALTER TABLE IF EXISTS public.barcodes
     ADD CONSTRAINT "Barcode_ProductId_fkey" FOREIGN KEY (product_id)
-    REFERENCES public.products ("Id") 
+    REFERENCES public.products (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.barcodes
+    ADD FOREIGN KEY ("user")
+    REFERENCES public.users (login) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
@@ -45,7 +61,7 @@ ALTER TABLE IF EXISTS public.barcodes
 
 ALTER TABLE IF EXISTS public.products_categories
     ADD FOREIGN KEY (product_id)
-    REFERENCES public.products ("Id") MATCH SIMPLE
+    REFERENCES public.products (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;

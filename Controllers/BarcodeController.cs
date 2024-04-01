@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Server.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Server.DataModel;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Controllers;
 
+[Authorize]
 [ApiController]
 public class BarcodeController : Controller
 {
@@ -17,7 +19,6 @@ public class BarcodeController : Controller
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
     }
 
-    
     [HttpPost]
     [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddBarcode(BarcodeViewModel barcode) 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Packaging;
@@ -6,6 +7,7 @@ using Server.ViewModels;
 
 namespace Server.Controllers;
 
+[Authorize]
 [ApiController]
 public class ProductController : Controller
 {

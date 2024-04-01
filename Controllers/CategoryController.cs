@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Server.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Server.DataModel;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Controllers;
 
+[Authorize]
 [ApiController]
 public class CategoryController : Controller
 {
