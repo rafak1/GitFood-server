@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
@@ -25,18 +26,11 @@ public class LoginController : Controller{
     [HttpPost]
     [AllowAnonymous]
     [Route($"{_controllerRoute}")]
-    public IActionResult Login(LoginRequest login)
+    public async Task<IActionResult> Login(LoginRequest login)
     {
-        var isCorrect = _dbInfo.Users.Where(x => x.Login == login.Email && x.Password == login.Password).FirstOrDefault();
-
-        if (isCorrect == null)
-        {
-            return Unauthorized();
-        }
-        else
-        {
-            return Ok(GrantToken());
-        }
+        var isCorrect = await _dbInfo.Users.FirstOrDefaultAsync(
+            x => x.Login == login.Email && x.Password == login.Password);
+        return isCorrect is null ? Unauthorized("") : Ok(GrantToken());
     }
 
     [HttpPost]
@@ -67,7 +61,7 @@ public class LoginController : Controller{
             signingCredentials: credentials);
 
         //print everything for debug
-        Console.WriteLine(Sectoken.ToString());
+        Debug.WriteLine(Sectoken.ToString());
 
 
         return new JwtSecurityTokenHandler().WriteToken(Sectoken);
