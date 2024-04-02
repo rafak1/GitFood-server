@@ -36,7 +36,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "Gitfood API", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
       {
-        Description = "Please enter into field the word 'Bearer' following by space and JWT",
+        Description = "Enter your token here",
          Name = "Authorization",
          In = ParameterLocation.Header,
          Type = SecuritySchemeType.Http,
