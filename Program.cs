@@ -2,6 +2,7 @@ using Server.DataModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
      };
  });
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "Gitfood API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+      {
+        Description = "Please enter into field the word 'Bearer' following by space and JWT",
+         Name = "Authorization",
+         In = ParameterLocation.Header,
+         Type = SecuritySchemeType.ApiKey,
+         Scheme = "Bearer"
+       });
+});
 
 var app = builder.Build();
 

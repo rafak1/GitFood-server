@@ -23,6 +23,7 @@ public class LoginController : Controller{
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [Route($"{_controllerRoute}")]
     public IActionResult Login(LoginRequest login)
     {
@@ -39,6 +40,7 @@ public class LoginController : Controller{
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [Route($"{_controllerRoute}/register")]
     public async Task<IActionResult> Register(LoginRequest login) 
     {

@@ -6,13 +6,17 @@ namespace Server.DataModel;
 
 public partial class GitfoodContext : DbContext
 {
-    public GitfoodContext()
+
+    private readonly IConfiguration _configuration;
+    public GitfoodContext(IConfiguration configuration)
     {
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
-    public GitfoodContext(DbContextOptions<GitfoodContext> options)
+    public GitfoodContext(DbContextOptions<GitfoodContext> options, IConfiguration configuration)
         : base(options)
     {
+         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
     public virtual DbSet<Barcode> Barcodes { get; set; }
@@ -23,9 +27,15 @@ public partial class GitfoodContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=gitfood;Username=rafak1;Password=root");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
+    {
+        if(bool.TryParse(_configuration.GetSection("LocalConfig").GetSection("UseLocalDb").Value, out var useLocalDb) && useLocalDb){
+            Console.WriteLine("Using LocalDb");
+            optionsBuilder.UseSqlite(_configuration.GetConnectionString("LocalDb"));
+        }
+        else
+            optionsBuilder.UseNpgsql(_configuration.GetConnectionString("WebApiDatabase"));
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

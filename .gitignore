@@ -4,3 +4,4 @@ LocalDatabase.db
 appsettings.json
 appsettings.Development.json
 ssl.pfx
+.vscode
