@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
 namespace Server.DataModel;
@@ -30,7 +31,6 @@ public partial class GitfoodContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
     {
         if(bool.TryParse(_configuration.GetSection("LocalConfig").GetSection("UseLocalDb").Value, out var useLocalDb) && useLocalDb){
-            Console.WriteLine("Using LocalDb");
             optionsBuilder.UseSqlite(_configuration.GetConnectionString("LocalDb"));
         }
         else
