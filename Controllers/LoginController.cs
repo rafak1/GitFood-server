@@ -55,7 +55,7 @@ public class LoginController : Controller{
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var Sectoken = new JwtSecurityToken(_config["Jwt:Issuer"],
-            null,
+            _config["Jwt:Issuer"],
             null,
             expires: DateTime.Now.AddMinutes(120),
             signingCredentials: credentials);
