@@ -60,9 +60,6 @@ public class LoginController : Controller{
             expires: DateTime.Now.AddMinutes(120),
             signingCredentials: credentials);
 
-        //print everything for debug
-        Debug.WriteLine(Sectoken.ToString());
-
 
         return new JwtSecurityTokenHandler().WriteToken(Sectoken);
     }
