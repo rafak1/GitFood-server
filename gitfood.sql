@@ -43,22 +43,6 @@ CREATE TABLE IF NOT EXISTS public.users
     PRIMARY KEY (login)
 );
 
-CREATE TABLE IF NOT EXISTS public.fridge
-(
-    product_id integer NOT NULL,
-    user_login character varying NOT NULL,
-    fridge_product_id serial NOT NULL,
-    PRIMARY KEY (fridge_product_id)
-);
-
-CREATE TABLE IF NOT EXISTS public.fridge_units
-(
-    fridge_product_id integer NOT NULL,
-    quantity double precision NOT NULL,
-    unit character varying NOT NULL,
-    PRIMARY KEY (fridge_product_id, unit)
-);
-
 ALTER TABLE IF EXISTS public.barcodes
     ADD CONSTRAINT "Barcode_ProductId_fkey" FOREIGN KEY (product_id)
     REFERENCES public.products (id) MATCH SIMPLE
@@ -86,30 +70,6 @@ ALTER TABLE IF EXISTS public.products_categories
 ALTER TABLE IF EXISTS public.products_categories
     ADD FOREIGN KEY (category_id)
     REFERENCES public.categories (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.fridge
-    ADD FOREIGN KEY (product_id)
-    REFERENCES public.products (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.fridge
-    ADD FOREIGN KEY (user_login)
-    REFERENCES public.users (login) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.fridge_units
-    ADD FOREIGN KEY (fridge_product_id)
-    REFERENCES public.fridge (fridge_product_id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
