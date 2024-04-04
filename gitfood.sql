@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS public.fridge
 (
     product_id integer NOT NULL,
     user_login character varying NOT NULL,
-    fridge_product_id serial NOT NULL,
-    PRIMARY KEY (fridge_product_id)
+    id serial NOT NULL,
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS public.fridge_units
@@ -109,7 +109,7 @@ ALTER TABLE IF EXISTS public.fridge
 
 ALTER TABLE IF EXISTS public.fridge_units
     ADD FOREIGN KEY (fridge_product_id)
-    REFERENCES public.fridge (fridge_product_id) MATCH SIMPLE
+    REFERENCES public.fridge (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
