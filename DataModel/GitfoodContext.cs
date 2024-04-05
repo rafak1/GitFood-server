@@ -6,7 +6,7 @@ namespace Server.DataModel;
 
 public partial class GitfoodContext : DbContext
 {
-     private readonly IConfiguration _configuration;
+    private readonly IConfiguration _configuration;
     public GitfoodContext(IConfiguration configuration)
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));

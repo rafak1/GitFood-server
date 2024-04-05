@@ -48,7 +48,8 @@ CREATE TABLE IF NOT EXISTS public.fridge
     product_id integer NOT NULL,
     user_login character varying NOT NULL,
     id serial NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE (product_id, user_login)
 );
 
 CREATE TABLE IF NOT EXISTS public.fridge_units
