@@ -13,5 +13,7 @@ public partial class Product
 
     public virtual ICollection<Barcode> Barcodes { get; set; } = new List<Barcode>();
 
+    public virtual ICollection<Fridge> Fridges { get; set; } = new List<Fridge>();
+
     public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
 }

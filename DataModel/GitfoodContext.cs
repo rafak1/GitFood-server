@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
 namespace Server.DataModel;
 
 public partial class GitfoodContext : DbContext
 {
-
     private readonly IConfiguration _configuration;
     public GitfoodContext(IConfiguration configuration)
     {
@@ -20,9 +18,14 @@ public partial class GitfoodContext : DbContext
          _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
+
     public virtual DbSet<Barcode> Barcodes { get; set; }
 
     public virtual DbSet<Category> Categories { get; set; }
+
+    public virtual DbSet<Fridge> Fridges { get; set; }
+
+    public virtual DbSet<FridgeUnit> FridgeUnits { get; set; }
 
     public virtual DbSet<Product> Products { get; set; }
 
@@ -73,6 +76,48 @@ public partial class GitfoodContext : DbContext
                 .IsRequired()
                 .HasColumnType("character varying")
                 .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<Fridge>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("fridge_pkey");
+
+            entity.ToTable("fridge");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.UserLogin)
+                .IsRequired()
+                .HasColumnType("character varying")
+                .HasColumnName("user_login");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.Fridges)
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fridge_product_id_fkey");
+
+            entity.HasOne(d => d.UserLoginNavigation).WithMany(p => p.Fridges)
+                .HasForeignKey(d => d.UserLogin)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fridge_user_login_fkey");
+        });
+
+        modelBuilder.Entity<FridgeUnit>(entity =>
+        {
+            entity.HasKey(e => new { e.FridgeProductId, e.Unit }).HasName("fridge_units_pkey");
+
+            entity.ToTable("fridge_units");
+
+            entity.Property(e => e.FridgeProductId).HasColumnName("fridge_product_id");
+            entity.Property(e => e.Unit)
+                .HasColumnType("character varying")
+                .HasColumnName("unit");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+
+            entity.HasOne(d => d.FridgeProduct).WithMany(p => p.FridgeUnits)
+                .HasForeignKey(d => d.FridgeProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fridge_units_fridge_product_id_fkey");
         });
 
         modelBuilder.Entity<Product>(entity =>

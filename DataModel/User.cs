@@ -10,4 +10,6 @@ public partial class User
     public string Password { get; set; }
 
     public virtual ICollection<Barcode> Barcodes { get; set; } = new List<Barcode>();
+
+    public virtual ICollection<Fridge> Fridges { get; set; } = new List<Fridge>();
 }
