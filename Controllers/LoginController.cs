@@ -15,12 +15,15 @@ public class LoginController : Controller{
 
     private readonly GitfoodContext _dbInfo;
 
+    private readonly ITokenGenerator _tokenGenerator;
+
     private readonly IConfiguration _config;
 
-    public LoginController(GitfoodContext database, IConfiguration config)
+    public LoginController(GitfoodContext database, ITokenGenerator tokenGenerator, IConfiguration config)
     {
-        _config = config ?? throw new ArgumentNullException(nameof(config));
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
+        _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));
+        _config = config ?? throw new ArgumentNullException(nameof(config));
     }
 
     [HttpPost]
@@ -30,7 +33,7 @@ public class LoginController : Controller{
     {
         var isCorrect = await _dbInfo.Users.FirstOrDefaultAsync(
             x => x.Login == login.Email && x.Password == login.Password);
-        return isCorrect is null ? Unauthorized("") : Ok(GrantToken());
+        return isCorrect is null ? Unauthorized("") : Ok(_tokenGenerator.GrantToken(_config["Jwt:Key"], _config["Jwt:Issuer"]));
     }
 
     [HttpPost]
@@ -47,21 +50,7 @@ public class LoginController : Controller{
 
         //Error handling?
 
-        return Ok(GrantToken());
-    }
-
-    private string GrantToken(){
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var Sectoken = new JwtSecurityToken(_config["Jwt:Issuer"],
-            _config["Jwt:Issuer"],
-            null,
-            expires: DateTime.Now.AddMinutes(120),
-            signingCredentials: credentials);
-
-
-        return new JwtSecurityTokenHandler().WriteToken(Sectoken);
+        return Ok(_tokenGenerator.GrantToken(_config["Jwt:Key"], _config["Jwt:Issuer"]));
     }
 
 }

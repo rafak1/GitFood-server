@@ -10,6 +10,7 @@ builder.Services.AddSingleton<GitfoodContext>();
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
