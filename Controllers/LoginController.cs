@@ -30,7 +30,6 @@ public class LoginController : Controller{
     {
         var isCorrect = await _dbInfo.Users.FirstOrDefaultAsync(
             x => x.Login == login.Email && x.Password == login.Password);
-	await _dbInfo.SaveChangesAsync();
         return isCorrect is null ? Unauthorized("") : Ok(GrantToken());
     }
 
