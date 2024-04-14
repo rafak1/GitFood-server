@@ -4,13 +4,19 @@ using Microsoft.IdentityModel.Tokens;
 
 public class TokenGenerator : ITokenGenerator
 {
+    private readonly ITokenConfigProvider _tokenConfigProvider;
 
-    public string GrantToken(string JwtKey, string JwtIssuer){
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtKey));
+    public TokenGenerator(ITokenConfigProvider tokenConfigProvider)
+    {
+        _tokenConfigProvider = tokenConfigProvider ?? throw new ArgumentNullException(nameof(tokenConfigProvider));
+    }
+
+    public string GrantToken(){
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_tokenConfigProvider.GetJwtKey()));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-        var Sectoken = new JwtSecurityToken(JwtIssuer,
-            JwtIssuer,
+        var Sectoken = new JwtSecurityToken(_tokenConfigProvider.GetJwtIssuer(),
+            _tokenConfigProvider.GetJwtIssuer(),
             null,
             expires: DateTime.Now.AddMinutes(120),
             signingCredentials: credentials);

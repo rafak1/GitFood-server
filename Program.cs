@@ -6,11 +6,12 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<GitfoodContext>();
+builder.Services.AddScoped<GitfoodContext>();
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
+builder.Services.AddSingleton<ITokenConfigProvider, TokenConfigProvider>(x => new TokenConfigProvider(builder.Configuration));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -25,7 +26,7 @@ var  MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
- .AddJwtBearer(options =>
+ .AddJwtBearer(options => 
  {
      options.TokenValidationParameters = new TokenValidationParameters
      {

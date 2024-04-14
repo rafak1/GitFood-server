@@ -1,11 +1,7 @@
-using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Server.DataModel;
 
 [ApiController]
@@ -17,13 +13,10 @@ public class LoginController : Controller{
 
     private readonly ITokenGenerator _tokenGenerator;
 
-    private readonly IConfiguration _config;
-
-    public LoginController(GitfoodContext database, ITokenGenerator tokenGenerator, IConfiguration config)
+    public LoginController(GitfoodContext database, ITokenGenerator tokenGenerator)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
         _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));
-        _config = config ?? throw new ArgumentNullException(nameof(config));
     }
 
     [HttpPost]
@@ -33,7 +26,7 @@ public class LoginController : Controller{
     {
         var isCorrect = await _dbInfo.Users.FirstOrDefaultAsync(
             x => x.Login == login.Email && x.Password == login.Password);
-        return isCorrect is null ? Unauthorized("") : Ok(_tokenGenerator.GrantToken(_config["Jwt:Key"], _config["Jwt:Issuer"]));
+        return isCorrect is null ? Unauthorized("") : Ok(_tokenGenerator.GrantToken());
     }
 
     [HttpPost]
@@ -50,7 +43,7 @@ public class LoginController : Controller{
 
         //Error handling?
 
-        return Ok(_tokenGenerator.GrantToken(_config["Jwt:Key"], _config["Jwt:Issuer"]));
+        return Ok(_tokenGenerator.GrantToken());
     }
 
 }
