@@ -14,9 +14,12 @@ public class BarcodeController : Controller
 
     private readonly GitfoodContext _dbInfo;
 
-    public BarcodeController(GitfoodContext database)
+    private readonly ITokenStorage _tokenStorage;
+
+    public BarcodeController(GitfoodContext database, ITokenStorage tokenStorage)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
+        _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));   
     }
 
     [HttpPost]
@@ -26,7 +29,8 @@ public class BarcodeController : Controller
         await _dbInfo.Barcodes.AddAsync(new Barcode
         {
             Key = barcode.BarcodeNumber,
-            ProductId = barcode.ProductId
+            ProductId = barcode.ProductId,
+            User = _tokenStorage.getUser(Request.Headers["Authorization"])
         });
         await _dbInfo.SaveChangesAsync();
         return Ok();

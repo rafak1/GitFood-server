@@ -15,15 +15,18 @@ public class LoginController : Controller{
 
     private readonly GitfoodContext _dbInfo;
 
-    private readonly IConfiguration _config;
+    private readonly ITokenGenerator _tokenGenerator;
 
     private readonly IStringChecker _checker;
 
-    public LoginController(GitfoodContext database, IConfiguration config, IStringChecker checker)
+    private readonly ITokenStorage _tokenStorage;
+
+    public LoginController(GitfoodContext database, ITokenGenerator tokenGenerator, IStringChecker checker, ITokenStorage tokenStorage)
     {
-        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
         _checker = checker ?? throw new ArgumentNullException(nameof(checker));
+        _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));
     }
 
     [HttpPost]
@@ -33,7 +36,15 @@ public class LoginController : Controller{
     {
         var isCorrect = await _dbInfo.Users.FirstOrDefaultAsync(
             x => x.Login == login.Email && x.Password == login.Password);
-        return isCorrect is null ? Unauthorized("") : Ok(GrantToken());
+        if(isCorrect == null){
+            return BadRequest("Invalid login or password");
+        }
+        else
+        {
+            var token = _tokenGenerator.GrantToken();
+            _tokenStorage.AddToken(token, login.Email);
+            return Ok(token);
+        }
     }
 
     [HttpPost]
@@ -52,22 +63,9 @@ public class LoginController : Controller{
         await _dbInfo.SaveChangesAsync();
 
         //Error handling?
-
-        return Ok(GrantToken());
+        
+        var token = _tokenGenerator.GrantToken();
+        _tokenStorage.AddToken(token, login.Email);
+        return Ok(token);
     }
-
-    private string GrantToken(){
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var Sectoken = new JwtSecurityToken(_config["Jwt:Issuer"],
-            _config["Jwt:Issuer"],
-            null,
-            expires: DateTime.Now.AddMinutes(120),
-            signingCredentials: credentials);
-
-
-        return new JwtSecurityTokenHandler().WriteToken(Sectoken);
-    }
-
 }

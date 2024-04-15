@@ -8,11 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<GitfoodContext>();
 builder.Services.AddScoped<IStringChecker, StringChecker>();
+builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
+builder.Services.AddSingleton<ITokenConfigProvider, TokenConfigProvider>(x => new TokenConfigProvider(builder.Configuration));
+builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+builder.Services.AddSingleton<ITokenStorage, TokenStorage>();
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 
 var jwtIssuer = builder.Configuration.GetSection("Jwt:Issuer").Get<string>();
 var jwtKey = builder.Configuration.GetSection("Jwt:Key").Get<string>();
