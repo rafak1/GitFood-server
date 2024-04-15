@@ -46,4 +46,17 @@ public class BarcodeController : Controller
         await _dbInfo.Barcodes.Where(x => x.Key == barcodeName).ExecuteDeleteAsync();
         return Ok();
     }
+
+    [HttpGet]
+    [Route($"{_controllerRoute}/suggest")]
+    public async Task<IActionResult> SuggestBarcode(string barcodeName) 
+    {
+        return Ok( 
+            await _dbInfo.Barcodes
+            .Where(x => x.Key == barcodeName)
+            .GroupBy(x => x.Key)
+            .OrderByDescending(x => x.Count())
+            .FirstOrDefaultAsync()
+        );
+    }
 }

@@ -17,10 +17,13 @@ public class LoginController : Controller{
 
     private readonly IConfiguration _config;
 
-    public LoginController(GitfoodContext database, IConfiguration config)
+    private readonly IStringChecker _checker;
+
+    public LoginController(GitfoodContext database, IConfiguration config, IStringChecker checker)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
+        _checker = checker ?? throw new ArgumentNullException(nameof(checker));
     }
 
     [HttpPost]
@@ -38,6 +41,9 @@ public class LoginController : Controller{
     [Route($"{_controllerRoute}/register")]
     public async Task<IActionResult> Register(LoginRequest login) 
     {
+        if(!_checker.IsCorrectPassword(login.Password) || !_checker.isCorrectLogin(login.Email))
+            return BadRequest("Invalid login or password");
+
         await _dbInfo.Users.AddAsync(new User
         {
             Login = login.Email,
