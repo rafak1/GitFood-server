@@ -12,6 +12,8 @@ public class BarcodeController : Controller
 {
     private const string _controllerRoute = "/barcode";
 
+    private const int _bearerOffset = 7;
+
     private readonly GitfoodContext _dbInfo;
 
     private readonly ITokenStorage _tokenStorage;
@@ -26,11 +28,14 @@ public class BarcodeController : Controller
     [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddBarcode(BarcodeViewModel barcode) 
     {
+        var user = _tokenStorage.GetUser(Request.Headers.Authorization.ToString()[_bearerOffset..]);
+        if(user == null) return BadRequest("No user found assigned to this token");
+
         await _dbInfo.Barcodes.AddAsync(new Barcode
         {
             Key = barcode.BarcodeNumber,
             ProductId = barcode.ProductId,
-            User = _tokenStorage.getUser(Request.Headers["Authorization"])
+            User = user
         });
         await _dbInfo.SaveChangesAsync();
         return Ok();

@@ -1,6 +1,6 @@
 public class TokenStorage : ITokenStorage
 {
-    private readonly Dictionary<string, (long , string)> _tokens = new Dictionary<string, (long , string)>();
+    private readonly Dictionary<string, (long CreationTime , string User)> _tokens = new Dictionary<string, (long , string)>();
 
     private readonly ITokenConfigProvider _tokenConfigProvider;
 
@@ -17,37 +17,27 @@ public class TokenStorage : ITokenStorage
 
     public void AddToken(string token, string user)
     {
-        long currentTime = _dateTimeProvider.GetCurrentMiliseconds();
+        var currentTime = _dateTimeProvider.GetCurrentMiliseconds();
         PurgeIfTime(currentTime);
         _tokens.Add(token, (currentTime, user));
     }
 
-    public string getUser(string token)
+    #nullable enable
+    public string? GetUser(string token)
     {
         PurgeIfTime(_dateTimeProvider.GetCurrentMiliseconds());
         if (_tokens.ContainsKey(token))
         {
-            return _tokens[token].Item2;
+            return _tokens[token].User;
         }
         return null;
     }
 
     private void PurgeIfTime(long currentTime){
-        if (currentTime - lastPurge > _tokenConfigProvider.GetJwtPurgeInterval())
-        {
-            lastPurge = currentTime;
-            var toRemove = new List<string>();
-            foreach (var entry in _tokens)
-            {
-                if (currentTime - entry.Value.Item1 > _tokenConfigProvider.GetJwtExpireMinutes() * 60)
-                {
-                    toRemove.Add(entry.Key);
-                }
-            }
-            foreach (var key in toRemove)
-            {
-                _tokens.Remove(key);
-            }
-        }
+        if (currentTime - lastPurge <= _tokenConfigProvider.GetJwtPurgeInterval()) return;
+        lastPurge = currentTime;
+        _tokens.Where(t => currentTime - t.Value.CreationTime > _tokenConfigProvider.GetJwtExpireMinutes() * 60 * 1000)
+            .ToList()
+            .ForEach(t => _tokens.Remove(t.Key));
     }
 }

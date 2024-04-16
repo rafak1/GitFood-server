@@ -7,23 +7,11 @@ public class TokenConfigProvider : ITokenConfigProvider
         _config = config ?? throw new ArgumentNullException(nameof(config));
     }
 
-    public int GetJwtPurgeInterval()
-    {
-        return int.Parse(_config["Jwt:PurgeInterval"]);
-    }
+    public int GetJwtPurgeInterval() => int.Parse(_config["Jwt:PurgeInterval"]);
 
-    public int GetJwtExpireMinutes()
-    {
-        return int.Parse(_config["Jwt:ExpireMinutes"]);
-    }
+    public int GetJwtExpireMinutes() => int.Parse(_config["Jwt:ExpireMinutes"]);
 
-    public string GetJwtIssuer()
-    {
-        return _config["Jwt:Issuer"];
-    }
+    public string GetJwtIssuer() =>_config["Jwt:Issuer"];
 
-    public string GetJwtKey()
-    {
-        return _config["Jwt:Key"];
-    }
+    public string GetJwtKey() => _config["Jwt:Key"];
 }

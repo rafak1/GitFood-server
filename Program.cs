@@ -7,7 +7,7 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<GitfoodContext>();
-builder.Services.AddScoped<IStringChecker, StringChecker>();
+builder.Services.AddSingleton<IPasswordChecker, PasswordChecker>();
 builder.Services.AddSingleton<ITokenGenerator, TokenGenerator>();
 builder.Services.AddSingleton<ITokenConfigProvider, TokenConfigProvider>(x => new TokenConfigProvider(builder.Configuration));
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();

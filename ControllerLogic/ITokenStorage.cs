@@ -1,5 +1,5 @@
 public interface ITokenStorage
 {
     void AddToken(string token, string user);
-    string getUser(string token);
+    string GetUser(string token);
 }

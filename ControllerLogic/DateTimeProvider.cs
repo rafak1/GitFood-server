@@ -1,12 +1,11 @@
 public class DateTimeProvider : IDateTimeProvider
 {
-    public DateTime GetCurrentDateTime()
-    {
-        return DateTime.Now;
-    }
+    private readonly DateTime _baseTime = new(1970, 1, 1);
+
+    public DateTime GetCurrentDateTime() => DateTime.Now;
 
     public long GetCurrentMiliseconds()
     {
-        return (long)(DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds;
+        return (long)(DateTime.Now - _baseTime).TotalMilliseconds;
     }
 }

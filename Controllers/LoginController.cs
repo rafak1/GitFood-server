@@ -13,15 +13,17 @@ public class LoginController : Controller{
 
     private const string _controllerRoute = "/login";
 
+    private const string _InvalidLoginOrPasswordMessage = "Invalid login or password";
+
     private readonly GitfoodContext _dbInfo;
 
     private readonly ITokenGenerator _tokenGenerator;
 
-    private readonly IStringChecker _checker;
+    private readonly IPasswordChecker _checker;
 
     private readonly ITokenStorage _tokenStorage;
 
-    public LoginController(GitfoodContext database, ITokenGenerator tokenGenerator, IStringChecker checker, ITokenStorage tokenStorage)
+    public LoginController(GitfoodContext database, ITokenGenerator tokenGenerator, IPasswordChecker checker, ITokenStorage tokenStorage)
     {
         _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
@@ -36,9 +38,8 @@ public class LoginController : Controller{
     {
         var isCorrect = await _dbInfo.Users.FirstOrDefaultAsync(
             x => x.Login == login.Email && x.Password == login.Password);
-        if(isCorrect == null){
-            return BadRequest("Invalid login or password");
-        }
+
+        if(isCorrect == null) return BadRequest(_InvalidLoginOrPasswordMessage);
         else
         {
             var token = _tokenGenerator.GrantToken();
@@ -53,7 +54,7 @@ public class LoginController : Controller{
     public async Task<IActionResult> Register(LoginRequest login) 
     {
         if(!_checker.IsCorrectPassword(login.Password) || !_checker.isCorrectLogin(login.Email))
-            return BadRequest("Invalid login or password");
+            return BadRequest(_InvalidLoginOrPasswordMessage);
 
         await _dbInfo.Users.AddAsync(new User
         {
