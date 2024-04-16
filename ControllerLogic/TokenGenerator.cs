@@ -18,7 +18,7 @@ public class TokenGenerator : ITokenGenerator
         var Sectoken = new JwtSecurityToken(_tokenConfigProvider.GetJwtIssuer(),
             _tokenConfigProvider.GetJwtIssuer(),
             null,
-            expires: DateTime.Now.AddMinutes(120),
+            expires: DateTime.Now.AddMinutes(_tokenConfigProvider.GetJwtExpireMinutes()),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(Sectoken);
