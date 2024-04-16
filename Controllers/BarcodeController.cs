@@ -12,21 +12,30 @@ public class BarcodeController : Controller
 {
     private const string _controllerRoute = "/barcode";
 
+    private const int _bearerOffset = 7;
+
     private readonly GitfoodContext _dbInfo;
 
-    public BarcodeController(GitfoodContext database)
+    private readonly ITokenStorage _tokenStorage;
+
+    public BarcodeController(GitfoodContext database, ITokenStorage tokenStorage)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
+        _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));   
     }
 
     [HttpPost]
     [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddBarcode(BarcodeViewModel barcode) 
     {
+        var user = _tokenStorage.GetUser(Request.Headers.Authorization.ToString()[_bearerOffset..]);
+        if(user == null) return BadRequest("No user found assigned to this token");
+
         await _dbInfo.Barcodes.AddAsync(new Barcode
         {
             Key = barcode.BarcodeNumber,
-            ProductId = barcode.ProductId
+            ProductId = barcode.ProductId,
+            User = user
         });
         await _dbInfo.SaveChangesAsync();
         return Ok();
@@ -45,5 +54,18 @@ public class BarcodeController : Controller
     {
         await _dbInfo.Barcodes.Where(x => x.Key == barcodeName).ExecuteDeleteAsync();
         return Ok();
+    }
+
+    [HttpGet]
+    [Route($"{_controllerRoute}/suggest")]
+    public async Task<IActionResult> SuggestBarcode(string barcodeName) 
+    {
+        return Ok( 
+            await _dbInfo.Barcodes
+            .Where(x => x.Key == barcodeName)
+            .GroupBy(x => x.Key)
+            .OrderByDescending(x => x.Count())
+            .FirstOrDefaultAsync()
+        );
     }
 }

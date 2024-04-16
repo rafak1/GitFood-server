@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.barcodes
     key character varying COLLATE pg_catalog."default" NOT NULL,
     product_id integer,
     "user" character varying,
-    CONSTRAINT "Barcode_pkey" PRIMARY KEY (key)
+    CONSTRAINT "Barcode_pkey" PRIMARY KEY (key, "user")
 );
 
 ALTER TABLE IF EXISTS public.barcodes
