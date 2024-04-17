@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NuGet.Packaging;
-using Server.DataModel;
-using Server.ViewModels;
+using Server.Logic.Abstract;
+using Server.ViewModels.Products;
 
 namespace Server.Controllers;
 
@@ -11,46 +9,41 @@ namespace Server.Controllers;
 [ApiController]
 public class ProductController : Controller
 {
-    private readonly GitfoodContext _dbInfo;
-    private const string ControllerPart = "products";
+    private readonly IProductManager _productManager;
+    private const string ControllerPart = "/products";
 
-    public ProductController(GitfoodContext database)
+    public ProductController(IProductManager productManager)
     {
-        _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
+        _productManager = productManager ?? throw new ArgumentNullException(nameof(productManager));
     }
 
     [HttpPost]
     [Route($"{ControllerPart}/add")]
     public async Task<IActionResult> AddProduct(ProductViewModel product) 
     {
-        await _dbInfo.Products.AddAsync(new Product{
-            Name = product.Name,
-            Description = product.Description
-        });
-        await _dbInfo.SaveChangesAsync();
+        await _productManager.AddProductAsync(product);
         return Ok();
     }
 
     [HttpGet]
     [Route($"{ControllerPart}/get")]
-    public IActionResult GetProduct(string name) 
+    public async Task<IActionResult> GetProducts(string name) 
     {
-        var result = _dbInfo.Products.Where(x => x.Name.Contains(name));
-        return Ok(GetProductsAllInfo(result));
+        return Ok(await _productManager.GetProductsAsync(name));
     }
 
     [HttpGet]
     [Route($"{ControllerPart}/getById")]
-    public IActionResult GetProductById(int id) 
+    public async Task<IActionResult> GetProductById(int id) 
     {
-        return Ok(GetProductsAllInfo(_dbInfo.Products.Where(x => x.Id == id)));
+        return Ok(await _productManager.GetProductByIdAsync(id));
     }
 
     [HttpDelete]
     [Route($"{ControllerPart}/delete")]
     public async Task<IActionResult> DeleteProduct(int id) 
     {
-        await _dbInfo.Products.Where(x => x.Id == id).ExecuteDeleteAsync();
+        await _productManager.DeleteProductAsync(id);
         return Ok();
     }
 
@@ -58,40 +51,7 @@ public class ProductController : Controller
     [Route($"{ControllerPart}/addToCategories")]
     public async Task<IActionResult> AddCategoriesToProduct(ProductToCategoriesViewModel model) 
     {
-        var product = await _dbInfo.Products.FirstOrDefaultAsync(x => x.Id == model.ProductId);
-        _dbInfo.Products.Update(product);
-        if(product is null || model.CategoriesIds is null)
-            return BadRequest();
-        product.Categories.AddRange(_dbInfo.Categories.Where(x => model.CategoriesIds.Contains(x.Id)));
-        await _dbInfo.SaveChangesAsync();
+        await _productManager.AddCategoriesToProductAsync(model);
         return Ok();
     }
-
-    private IQueryable<ProductWithCategoryAndBarcodeViewModel> GetProductsAllInfo(IQueryable<Product> products) 
-    {
-        return products.Select(x => new ProductWithCategoryAndBarcodeViewModel() {
-            Product = new IdExtendedViewModel<ProductViewModel>() {
-                Id = x.Id,
-                InnerInformation = new ProductViewModel() {
-                    Name = x.Name,
-                    Description = x.Description
-                }
-            },
-            Categories = x.Categories.Select(x => 
-                new IdExtendedViewModel<CategoryViewModel>() {
-                    Id = x.Id,
-                    InnerInformation = new CategoryViewModel() {
-                        Name = x.Name
-                    }
-                }
-            ).ToArray(),
-            Barcodes = x.Barcodes.Select(x => 
-                new BarcodeViewModel() {
-                    BarcodeNumber = x.Key,
-                    ProductId = x.ProductId.Value
-                }
-            ).ToArray()
-        });
-    }
-
 }

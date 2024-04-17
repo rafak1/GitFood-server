@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Server.ViewModels;
-using Microsoft.EntityFrameworkCore;
-using Server.DataModel;
+using Server.ViewModels.Categories;
 using Microsoft.AspNetCore.Authorization;
+using Server.Logic.Abstract;
 
 namespace Server.Controllers;
 
@@ -11,12 +10,11 @@ namespace Server.Controllers;
 public class CategoryController : Controller
 {
     private const string _controllerRoute = "/category";
+    private readonly ICategoryManager _categoryManager;
 
-    private readonly GitfoodContext _dbInfo;
-
-    public CategoryController(GitfoodContext database)
+    public CategoryController(ICategoryManager categoryManager)
     {
-        _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
+        _categoryManager = categoryManager ?? throw new ArgumentNullException(nameof(categoryManager));
     }
 
     
@@ -24,25 +22,22 @@ public class CategoryController : Controller
     [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddCategory(CategoryViewModel category) 
     {
-        await _dbInfo.Categories.AddAsync(new Category() {
-            Name = category.Name,
-        });
-        await _dbInfo.SaveChangesAsync();
+        await _categoryManager.AddCategoryAsync(category);
         return Ok();
     }
 
     [HttpGet]
     [Route($"{_controllerRoute}/get")]
-    public IActionResult GetCategories(string name) 
+    public async Task<IActionResult> GetCategoriesAsync(string name) 
     {
-        return Ok(_dbInfo.Categories.Where(x => x.Name.Contains(name)));
+        return Ok(await _categoryManager.GetCategoriesAsync(name));
     }
 
     [HttpDelete]
     [Route($"{_controllerRoute}/delete")]
     public async Task<IActionResult> DeleteCategory(int id) 
     {
-        await _dbInfo.Categories.Where(x => x.Id == id).ExecuteDeleteAsync();
+        await _categoryManager.DeleteCategoryAsync(id);
         return Ok();
     }
 }

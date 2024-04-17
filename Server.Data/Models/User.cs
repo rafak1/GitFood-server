@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Server.DataModel;
+﻿namespace Server.Data.Models;
 
 public partial class User
 {
