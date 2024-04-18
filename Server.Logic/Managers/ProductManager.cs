@@ -1,4 +1,4 @@
-using Server.Logic.Abstract;
+using Server.Logic.Abstract.Managers;
 using Server.ViewModels.Products;
 using Server.ViewModels;
 using Server.Data.Models;

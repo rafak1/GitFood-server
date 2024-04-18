@@ -1,7 +1,6 @@
 using Server.ViewModels.Products;
-using Server.ViewModels;
 
-namespace Server.Logic.Abstract;
+namespace Server.Logic.Abstract.Managers;
 
 public interface IProductManager
 {

@@ -7,6 +7,5 @@ namespace Server.Database;
 public partial class GitfoodContext : DbContext, IDbInfo
 {
     public async Task<int> SaveChangesAsync() => await base.SaveChangesAsync();
-    
-    IQueryable<Barcode> IDbInfo.Barcodes => Barcodes;
+
 }

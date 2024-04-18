@@ -2,7 +2,7 @@
 using Server.Data.Models;
 using Server.ViewModels.Categories;
 
-namespace Server.Logic.Abstract;
+namespace Server.Logic.Abstract.Managers;
 
 public interface ICategoryManager
 {

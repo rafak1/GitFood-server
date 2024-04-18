@@ -1,9 +1,10 @@
-
-using Server.Logic.Abstract;
+using Server.Logic.Abstract.Managers;
 using Server.Database;
 using Server.ViewModels.Categories;
 using Server.Data.Models;
 using Microsoft.EntityFrameworkCore;
+
+namespace Server.Logic.Managers;
 
 internal class CategoryManager : ICategoryManager
 {

@@ -1,6 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Server.Logic.Abstract.Authentication;
+
+namespace Server.Logic.Authentication;
 
 public class TokenGenerator : ITokenGenerator
 {

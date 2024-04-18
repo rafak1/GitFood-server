@@ -1,11 +1,14 @@
+using Server.Logic.Abstract;
+using Server.Logic.Abstract.Authentication;
+using Server.Logic.Abstract.Token;
+
+namespace Server.Logic.Token;
+
 public class TokenStorage : ITokenStorage
 {
     private readonly Dictionary<string, (long CreationTime , string User)> _tokens = new Dictionary<string, (long , string)>();
-
     private readonly ITokenConfigProvider _tokenConfigProvider;
-
     private readonly IDateTimeProvider _dateTimeProvider;
-
     private long lastPurge = 0;
 
     public TokenStorage(ITokenConfigProvider tokenConfigProvider, IDateTimeProvider dateTimeProvider)
@@ -22,19 +25,16 @@ public class TokenStorage : ITokenStorage
         _tokens.Add(token, (currentTime, user));
     }
 
-    #nullable enable
-    public string? GetUser(string token)
+    public string GetUser(string token)
     {
         PurgeIfTime(_dateTimeProvider.GetCurrentMiliseconds());
-        if (_tokens.ContainsKey(token))
-        {
-            return _tokens[token].User;
-        }
-        return null;
+        return _tokens.ContainsKey(token) ?  _tokens[token].User : null;
     }
 
-    private void PurgeIfTime(long currentTime){
-        if (currentTime - lastPurge <= _tokenConfigProvider.GetJwtPurgeInterval()) return;
+    private void PurgeIfTime(long currentTime)
+    {
+        if (currentTime - lastPurge <= _tokenConfigProvider.GetJwtPurgeInterval()) 
+            return;
         lastPurge = currentTime;
         _tokens.Where(t => currentTime - t.Value.CreationTime > _tokenConfigProvider.GetJwtExpireMinutes() * 60 * 1000)
             .ToList()

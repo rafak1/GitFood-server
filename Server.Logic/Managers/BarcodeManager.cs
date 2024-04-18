@@ -1,5 +1,5 @@
 using Server.Data.Models;
-using Server.Logic.Abstract;
+using Server.Logic.Abstract.Managers;
 using Server.Database;
 using Server.ViewModels.Barcodes;
 using Microsoft.EntityFrameworkCore;
@@ -30,4 +30,13 @@ internal class BarcodeManager : IBarcodeManager
 
     public async Task<Barcode> GetBarcodeAsync(string barcodeKey)
         => await _dbInfo.Barcodes.FirstOrDefaultAsync(x => x.Key == barcodeKey);
+
+    public async Task<IDictionary<string, Barcode>> SuggestBarcodeAsync(string barcodeName) 
+    {
+        return (await _dbInfo.Barcodes
+            .Where(x => x.Key == barcodeName)
+            .GroupBy(x => x.Key)
+            .OrderByDescending(x => x.Count())
+            .FirstOrDefaultAsync()).ToDictionary(x => x.Key);
+    }
 }

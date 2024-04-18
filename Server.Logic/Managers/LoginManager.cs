@@ -1,28 +1,22 @@
-using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
+using Server.Logic.Abstract.Managers;
+using Server.Logic.Abstract.Authentication;
+using Server.Logic.Abstract.Token;
 using Server.Data.Models;
+using Server.Database;
 
-[ApiController]
-public class LoginController : Controller{
+namespace Server.Logic.Managers;
 
-    private const string _controllerRoute = "/login";
-
+internal class LoginManager : ILoginManager
+{
+    private readonly GitfoodContext _dbInfo;
+    private readonly ITokenGenerator _tokenGenerator;
+    private readonly IPasswordChecker _checker;
+    private readonly ITokenStorage _tokenStorage;
     private const string _InvalidLoginOrPasswordMessage = "Invalid login or password";
 
-    private readonly GitfoodContext _dbInfo;
-
-    private readonly ITokenGenerator _tokenGenerator;
-
-    private readonly IPasswordChecker _checker;
-
-    private readonly ITokenStorage _tokenStorage;
-
-    public LoginController(GitfoodContext database, ITokenGenerator tokenGenerator, IPasswordChecker checker, ITokenStorage tokenStorage)
+    public LoginManager(GitfoodContext database, ITokenGenerator tokenGenerator, IPasswordChecker checker, ITokenStorage tokenStorage)
     {
         _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
@@ -30,30 +24,26 @@ public class LoginController : Controller{
         _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));
     }
 
-    [HttpPost]
-    [AllowAnonymous]
-    [Route($"{_controllerRoute}")]
-    public async Task<IActionResult> Login(LoginRequest login)
+    public async Task<string> LoginAsync(LoginRequest login)
     {
         var isCorrect = await _dbInfo.Users.FirstOrDefaultAsync(
             x => x.Login == login.Email && x.Password == login.Password);
 
-        if(isCorrect == null) return BadRequest(_InvalidLoginOrPasswordMessage);
+        if(isCorrect == null) 
+            return _InvalidLoginOrPasswordMessage; // BadRequest
         else
         {
             var token = _tokenGenerator.GrantToken();
             _tokenStorage.AddToken(token, login.Email);
-            return Ok(token);
+            // OK
+            return token;
         }
     }
 
-    [HttpPost]
-    [AllowAnonymous]
-    [Route($"{_controllerRoute}/register")]
-    public async Task<IActionResult> Register(LoginRequest login) 
+    public async Task<string> RegisterAsync(LoginRequest login) 
     {
         if(!_checker.IsCorrectPassword(login.Password) || !_checker.isCorrectLogin(login.Email))
-            return BadRequest(_InvalidLoginOrPasswordMessage);
+            return _InvalidLoginOrPasswordMessage; //BadRequest
 
         await _dbInfo.Users.AddAsync(new User
         {
@@ -66,6 +56,6 @@ public class LoginController : Controller{
         
         var token = _tokenGenerator.GrantToken();
         _tokenStorage.AddToken(token, login.Email);
-        return Ok(token);
+        return token; // OK
     }
 }

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Server.Logic.Abstract;
+using Server.Logic.Abstract.Managers;
+using Server.Logic.Abstract.Token;
 using Server.ViewModels.Barcodes;
-using Server.Data.Models;
 
 namespace Server.Controllers;
 
@@ -18,10 +18,8 @@ public class BarcodeController : Controller
 
     private readonly ITokenStorage _tokenStorage;
 
-    public BarcodeController(GitfoodContext database, ITokenStorage tokenStorage)
-    public BarcodeController(IBarcodeManager database)
+    public BarcodeController(ITokenStorage tokenStorage, IBarcodeManager barcodeManager)
     {
-        _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
         _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));   
         _barcodeManger = _barcodeManger ?? throw new ArgumentNullException(nameof(_barcodeManger));
     }
@@ -30,17 +28,10 @@ public class BarcodeController : Controller
     [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddBarcode(BarcodeViewModel barcode) 
     {
-        await _barcodeManger.AddBarcodeAsync(barcode);
         var user = _tokenStorage.GetUser(Request.Headers.Authorization.ToString()[_bearerOffset..]);
         if(user == null) return BadRequest("No user found assigned to this token");
 
-        await _dbInfo.Barcodes.AddAsync(new Barcode
-        {
-            Key = barcode.BarcodeNumber,
-            ProductId = barcode.ProductId,
-            User = user
-        });
-        await _dbInfo.SaveChangesAsync();
+        await _barcodeManger.AddBarcodeAsync(barcode);
         return Ok();
     }
 
@@ -61,12 +52,6 @@ public class BarcodeController : Controller
     [Route($"{_controllerRoute}/suggest")]
     public async Task<IActionResult> SuggestBarcode(string barcodeName) 
     {
-        return Ok( 
-            await _dbInfo.Barcodes
-            .Where(x => x.Key == barcodeName)
-            .GroupBy(x => x.Key)
-            .OrderByDescending(x => x.Count())
-            .FirstOrDefaultAsync()
-        );
+        return Ok(await _barcodeManger.SuggestBarcodeAsync(barcodeName));
     }
 }

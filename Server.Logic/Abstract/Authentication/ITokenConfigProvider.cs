@@ -1,3 +1,5 @@
+namespace Server.Logic.Abstract.Authentication;
+
 public interface ITokenConfigProvider
 {
     string GetJwtKey();

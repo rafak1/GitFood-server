@@ -1,32 +1,26 @@
-using Microsoft.AspNetCore.Mvc;
-using Server.ViewModels;
+using Server.Logic.Abstract.Managers;
+using Server.Data.Models;
+using Server.ViewModels.Fridge;
+using Server.Database;
 using Microsoft.EntityFrameworkCore;
-using Server.DataModel;
-using Microsoft.AspNetCore.Authorization;
 
-[Authorize]
-[ApiController]
-public class FridgeController : Controller
+namespace Server.Logic.Managers;
+
+internal class FridgeManager : IFridgeManager
 {
-    private const string _controllerRoute = "/fridge";
-
     private readonly GitfoodContext _dbInfo;
 
-    public FridgeController(GitfoodContext database)
+    public FridgeManager(GitfoodContext database)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
     }
 
-
-    [HttpPost]
-    [Route($"{_controllerRoute}/add")]
-    public async Task<IActionResult> AddProductToFridge(FridgeProductViewModel fridgeProduct) 
+    public async Task AddProductToFridgeAsync(FridgeProductViewModel fridgeProduct) 
     {
 
         if (!Enum.IsDefined(typeof(Units), fridgeProduct.Unit))
-        {
-            return BadRequest("Invalid Unit");
-        }
+            return; //BadRequest
+            
         await _dbInfo.Fridges.AddAsync(new Fridge
         {
             ProductId = fridgeProduct.ProductId,
@@ -41,34 +35,26 @@ public class FridgeController : Controller
             ]
         });
         await _dbInfo.SaveChangesAsync();
-        return Ok();
+        // OK
     }
 
-
-    [HttpDelete]
-    [Route($"{_controllerRoute}/delete")]
-    public async Task<IActionResult> DeleteProductFromFridge(int fridgeProductId) 
+    public async Task DeleteProductFromFridgeAsync(int fridgeProductId) 
     {
         await _dbInfo.FridgeUnits.Where(x => x.FridgeProductId == fridgeProductId).ExecuteDeleteAsync();
         await _dbInfo.Fridges.Where(x => x.Id == fridgeProductId).ExecuteDeleteAsync();
-        return Ok();
+        // OK
     }
 
-
-    [HttpPatch]
-    [Route($"{_controllerRoute}/update")]
-    public async Task<IActionResult> UpdateProductInFridge(FridgeProductViewModel fridgeProduct) 
+    public async Task UpdateProductInFridgeAsync(FridgeProductViewModel fridgeProduct) 
     {
         if (!Enum.IsDefined(typeof(Units), fridgeProduct.Unit))
-        {
-            return BadRequest("Invalid Unit");
-        }
+            return; // BadRequest
+
         var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.ProductId == fridgeProduct.ProductId && x.UserLogin == fridgeProduct.Login);
         if (fridge is null)
-        {
-            return NotFound();
-        }
-        if (fridge.FridgeUnits.Any(x => x.Unit == fridgeProduct.Unit))
+            return; // NotFound
+
+        if(fridge.FridgeUnits.Any(x => x.Unit == fridgeProduct.Unit))
         {
             fridge.FridgeUnits.First(x => x.Unit == fridgeProduct.Unit).Quantity = fridgeProduct.Quantity;
         }
@@ -81,15 +67,9 @@ public class FridgeController : Controller
             });
         }
         await _dbInfo.SaveChangesAsync();
-        return Ok();
+        // OK
     }
 
-
-    [HttpGet]
-    [Route($"{_controllerRoute}/get")]
-    public IActionResult GetFridge(string login) 
-    {
-        return Ok(_dbInfo.Fridges.Where(x => x.UserLogin == login));
-    }
-
+    public async Task<Fridge> GetFridgeAsync(string login)
+        => await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.UserLogin == login);
 }

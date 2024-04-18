@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Server.Logic.Abstract;
+using Server.Logic.Abstract.Managers;
 using Server.ViewModels.Products;
 
 namespace Server.Controllers;
