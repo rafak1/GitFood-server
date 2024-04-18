@@ -4,9 +4,9 @@ namespace Server.Logic.Abstract.Managers;
 
 public interface IProductManager
 {
-    public Task AddProductAsync(ProductViewModel product);
-    public Task<ProductWithCategoryAndBarcodeViewModel[]> GetProductsAsync(string name);
-    public Task<ProductWithCategoryAndBarcodeViewModel> GetProductByIdAsync(int id);
-    public Task DeleteProductAsync(int id);
-    public Task AddCategoriesToProductAsync(ProductToCategoriesViewModel model);
+    public Task<IManagerActionResult> AddProductAsync(ProductViewModel product);
+    public Task<IManagerActionResult<ProductWithCategoryAndBarcodeViewModel[]>> GetProductsAsync(string name);
+    public Task<IManagerActionResult<ProductWithCategoryAndBarcodeViewModel>> GetProductByIdAsync(int id);
+    public Task<IManagerActionResult> DeleteProductAsync(int id);
+    public Task<IManagerActionResult> AddCategoriesToProductAsync(ProductToCategoriesViewModel model);
 }

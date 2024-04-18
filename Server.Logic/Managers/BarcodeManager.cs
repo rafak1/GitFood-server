@@ -1,5 +1,6 @@
 using Server.Data.Models;
 using Server.Logic.Abstract.Managers;
+using Server.Logic.Abstract;
 using Server.Database;
 using Server.ViewModels.Barcodes;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +16,7 @@ internal class BarcodeManager : IBarcodeManager
         _dbInfo = dbInfo ?? throw new ArgumentNullException(nameof(dbInfo));
     }
 
-    public async Task AddBarcodeAsync(BarcodeViewModel barcode)
+    public async Task<IManagerActionResult> AddBarcodeAsync(BarcodeViewModel barcode)
     {
         await _dbInfo.Barcodes.AddAsync(new Barcode
         {
@@ -23,20 +24,29 @@ internal class BarcodeManager : IBarcodeManager
             ProductId = barcode.ProductId,
         });
         await _dbInfo.SaveChangesAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+
     }
 
-    public async Task DeleteBarcodeAsync(string barcodeKey)
-        => await _dbInfo.Barcodes.Where(x => x.Key == barcodeKey).ExecuteDeleteAsync();
-
-    public async Task<Barcode> GetBarcodeAsync(string barcodeKey)
-        => await _dbInfo.Barcodes.FirstOrDefaultAsync(x => x.Key == barcodeKey);
-
-    public async Task<IDictionary<string, Barcode>> SuggestBarcodeAsync(string barcodeName) 
+    public async Task<IManagerActionResult> DeleteBarcodeAsync(string barcodeKey) 
     {
-        return (await _dbInfo.Barcodes
+        await _dbInfo.Barcodes.Where(x => x.Key == barcodeKey).ExecuteDeleteAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult<Barcode>> GetBarcodeAsync(string barcodeKey) 
+    {
+        var barcode = await _dbInfo.Barcodes.FirstOrDefaultAsync(x => x.Key == barcodeKey);
+        return new ManagerActionResult<Barcode>(barcode, ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult<IDictionary<string, Barcode>>> SuggestBarcodeAsync(string barcodeName) 
+    {
+        var barcodes = (await _dbInfo.Barcodes
             .Where(x => x.Key == barcodeName)
             .GroupBy(x => x.Key)
             .OrderByDescending(x => x.Count())
             .FirstOrDefaultAsync()).ToDictionary(x => x.Key);
+        return new ManagerActionResult<IDictionary<string, Barcode>>(barcodes, ResultEnum.OK);
     }
 }

@@ -20,38 +20,25 @@ public class ProductController : Controller
     [HttpPost]
     [Route($"{ControllerPart}/add")]
     public async Task<IActionResult> AddProduct(ProductViewModel product) 
-    {
-        await _productManager.AddProductAsync(product);
-        return Ok();
-    }
+        => (await _productManager.AddProductAsync(product)).MapToActionResult();
 
     [HttpGet]
     [Route($"{ControllerPart}/get")]
     public async Task<IActionResult> GetProducts(string name) 
-    {
-        return Ok(await _productManager.GetProductsAsync(name));
-    }
+        => (await _productManager.GetProductsAsync(name)).MapToActionResult();
 
     [HttpGet]
     [Route($"{ControllerPart}/getById")]
     public async Task<IActionResult> GetProductById(int id) 
-    {
-        return Ok(await _productManager.GetProductByIdAsync(id));
-    }
+        => (await _productManager.GetProductByIdAsync(id)).MapToActionResult();
 
     [HttpDelete]
     [Route($"{ControllerPart}/delete")]
     public async Task<IActionResult> DeleteProduct(int id) 
-    {
-        await _productManager.DeleteProductAsync(id);
-        return Ok();
-    }
+        => (await _productManager.DeleteProductAsync(id)).MapToActionResult();
 
     [HttpPost]
     [Route($"{ControllerPart}/addToCategories")]
     public async Task<IActionResult> AddCategoriesToProduct(ProductToCategoriesViewModel model) 
-    {
-        await _productManager.AddCategoriesToProductAsync(model);
-        return Ok();
-    }
+        => (await _productManager.AddCategoriesToProductAsync(model)).MapToActionResult();
 }

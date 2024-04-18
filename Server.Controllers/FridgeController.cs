@@ -20,35 +20,24 @@ public class FridgeController : Controller
     [HttpPost]
     [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddProductToFridge(FridgeProductViewModel fridgeProduct) 
-    {
-        await _fridgeManager.AddProductToFridgeAsync(fridgeProduct);
-        return Ok();
-    }
+        => (await _fridgeManager.AddProductToFridgeAsync(fridgeProduct)).MapToActionResult();
 
 
     [HttpDelete]
     [Route($"{_controllerRoute}/delete")]
     public async Task<IActionResult> DeleteProductFromFridge(int fridgeProductId) 
-    {
-        await _fridgeManager.DeleteProductFromFridgeAsync(fridgeProductId);
-        return Ok();
-    }
+        => (await _fridgeManager.DeleteProductFromFridgeAsync(fridgeProductId)).MapToActionResult();
 
 
     [HttpPatch]
     [Route($"{_controllerRoute}/update")]
     public async Task<IActionResult> UpdateProductInFridge(FridgeProductViewModel fridgeProduct) 
-    {
-        await _fridgeManager.UpdateProductInFridgeAsync(fridgeProduct);
-        return Ok();
-    }
+        => (await _fridgeManager.UpdateProductInFridgeAsync(fridgeProduct)).MapToActionResult();
 
 
     [HttpGet]
     [Route($"{_controllerRoute}/get")]
     public async Task<IActionResult> GetFridge(string login) 
-    {
-        return Ok(await _fridgeManager.GetFridgeAsync(login));
-    }
+        => (await _fridgeManager.GetFridgeAsync(login)).MapToActionResult();
 
 }

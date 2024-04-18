@@ -29,29 +29,24 @@ public class BarcodeController : Controller
     public async Task<IActionResult> AddBarcode(BarcodeViewModel barcode) 
     {
         var user = _tokenStorage.GetUser(Request.Headers.Authorization.ToString()[_bearerOffset..]);
-        if(user == null) return BadRequest("No user found assigned to this token");
+        if(user == null) 
+            return BadRequest("No user found assigned to this token");
 
-        await _barcodeManger.AddBarcodeAsync(barcode);
-        return Ok();
+        return (await _barcodeManger.AddBarcodeAsync(barcode)).MapToActionResult();
     }
 
     [HttpGet]
     [Route($"{_controllerRoute}/get")]
     public async Task<IActionResult> GetBarcode(string barcodeNumber) 
-        => Ok(await _barcodeManger.GetBarcodeAsync(barcodeNumber));
+        => (await _barcodeManger.GetBarcodeAsync(barcodeNumber)).MapToActionResult();
 
     [HttpDelete]
     [Route($"{_controllerRoute}/delete")]
     public async Task<IActionResult> DeleteBarcode(string barcodeNumber) 
-    {
-        await _barcodeManger.DeleteBarcodeAsync(barcodeNumber);
-        return Ok();
-    }
+        => (await _barcodeManger.DeleteBarcodeAsync(barcodeNumber)).MapToActionResult();
 
     [HttpGet]
     [Route($"{_controllerRoute}/suggest")]
     public async Task<IActionResult> SuggestBarcode(string barcodeName) 
-    {
-        return Ok(await _barcodeManger.SuggestBarcodeAsync(barcodeName));
-    }
+        => (await _barcodeManger.SuggestBarcodeAsync(barcodeName)).MapToActionResult();
 }

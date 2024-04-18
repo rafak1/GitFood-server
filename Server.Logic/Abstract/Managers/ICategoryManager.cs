@@ -5,7 +5,7 @@ namespace Server.Logic.Abstract.Managers;
 
 public interface ICategoryManager
 {
-    public Task AddCategoryAsync(CategoryViewModel category);
-    public Task<Category[]> GetCategoriesAsync(string name);
-    public Task DeleteCategoryAsync(int id);
+    public Task<IManagerActionResult> AddCategoryAsync(CategoryViewModel category);
+    public Task<IManagerActionResult<Category[]>> GetCategoriesAsync(string name);
+    public Task<IManagerActionResult> DeleteCategoryAsync(int id);
 }

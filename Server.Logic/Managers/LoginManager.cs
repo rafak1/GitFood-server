@@ -5,6 +5,7 @@ using Server.Logic.Abstract.Authentication;
 using Server.Logic.Abstract.Token;
 using Server.Data.Models;
 using Server.Database;
+using Server.Logic.Abstract;
 
 namespace Server.Logic.Managers;
 
@@ -24,26 +25,25 @@ internal class LoginManager : ILoginManager
         _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));
     }
 
-    public async Task<string> LoginAsync(LoginRequest login)
+    public async Task<IManagerActionResult<string>> LoginAsync(LoginRequest login)
     {
         var isCorrect = await _dbInfo.Users.FirstOrDefaultAsync(
             x => x.Login == login.Email && x.Password == login.Password);
 
         if(isCorrect == null) 
-            return _InvalidLoginOrPasswordMessage; // BadRequest
+            return new ManagerActionResult<string>(null, ResultEnum.BadRequest, _InvalidLoginOrPasswordMessage);
         else
         {
             var token = _tokenGenerator.GrantToken();
             _tokenStorage.AddToken(token, login.Email);
-            // OK
-            return token;
+            return new ManagerActionResult<string>(token, ResultEnum.OK);
         }
     }
 
-    public async Task<string> RegisterAsync(LoginRequest login) 
+    public async Task<IManagerActionResult<string>> RegisterAsync(LoginRequest login) 
     {
         if(!_checker.IsCorrectPassword(login.Password) || !_checker.isCorrectLogin(login.Email))
-            return _InvalidLoginOrPasswordMessage; //BadRequest
+            return new ManagerActionResult<string>(null, ResultEnum.BadRequest, _InvalidLoginOrPasswordMessage);
 
         await _dbInfo.Users.AddAsync(new User
         {
@@ -56,6 +56,6 @@ internal class LoginManager : ILoginManager
         
         var token = _tokenGenerator.GrantToken();
         _tokenStorage.AddToken(token, login.Email);
-        return token; // OK
+        return new ManagerActionResult<string>(token, ResultEnum.OK);
     }
 }

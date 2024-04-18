@@ -21,23 +21,15 @@ public class CategoryController : Controller
     [HttpPost]
     [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddCategory(CategoryViewModel category) 
-    {
-        await _categoryManager.AddCategoryAsync(category);
-        return Ok();
-    }
+        => (await _categoryManager.AddCategoryAsync(category)).MapToActionResult();
 
     [HttpGet]
     [Route($"{_controllerRoute}/get")]
     public async Task<IActionResult> GetCategoriesAsync(string name) 
-    {
-        return Ok(await _categoryManager.GetCategoriesAsync(name));
-    }
+        => (await _categoryManager.GetCategoriesAsync(name)).MapToActionResult();
 
     [HttpDelete]
     [Route($"{_controllerRoute}/delete")]
     public async Task<IActionResult> DeleteCategory(int id) 
-    {
-        await _categoryManager.DeleteCategoryAsync(id);
-        return Ok();
-    }
+        => (await _categoryManager.DeleteCategoryAsync(id)).MapToActionResult();
 }

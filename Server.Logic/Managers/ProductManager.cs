@@ -6,7 +6,9 @@ using Server.Database;
 using Server.ViewModels.Categories;
 using Server.ViewModels.Barcodes;
 using Microsoft.EntityFrameworkCore;
+using Server.Logic.Abstract;
 using NuGet.Packaging;
+using SQLitePCL;
 
 namespace Server.Logic.Managers;
 
@@ -20,40 +22,44 @@ internal class ProductManager : IProductManager
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
     }
 
-    public async Task AddProductAsync(ProductViewModel product) 
+    public async Task<IManagerActionResult> AddProductAsync(ProductViewModel product) 
     {
         await _dbInfo.Products.AddAsync(new Product{
             Name = product.Name,
             Description = product.Description
         });
         await _dbInfo.SaveChangesAsync();
+        return new ManagerActionResult(ResultEnum.OK);
     }
-    public async Task<ProductWithCategoryAndBarcodeViewModel[]> GetProductsAsync(string name) 
+    public async Task<IManagerActionResult<ProductWithCategoryAndBarcodeViewModel[]>> GetProductsAsync(string name) 
     {
-        var result = await _dbInfo.Products.Where(x => x.Name.Contains(name)).ToArrayAsync();
-        return result.Select(GetProductAllInfo).ToArray();
+        var rawProducts = await _dbInfo.Products.Where(x => x.Name.Contains(name)).ToArrayAsync();
+        var products = rawProducts.Select(GetProductAllInfo).ToArray();
+        return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel[]>(products, ResultEnum.OK);
     }
 
-    public async Task<ProductWithCategoryAndBarcodeViewModel> GetProductByIdAsync(int id) 
+    public async Task<IManagerActionResult<ProductWithCategoryAndBarcodeViewModel>> GetProductByIdAsync(int id) 
     {
         var result = await _dbInfo.Products.FirstOrDefaultAsync(x => x.Id == id);
         if(result is null)
-            return null;
-        return GetProductAllInfo(result);
+            return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(null, ResultEnum.NotFound);
+        return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(GetProductAllInfo(result), ResultEnum.OK);
     }
 
-    public async Task DeleteProductAsync(int id) 
+    public async Task<IManagerActionResult> DeleteProductAsync(int id) 
     {
         await _dbInfo.Products.Where(x => x.Id == id).ExecuteDeleteAsync();
+        return new ManagerActionResult(ResultEnum.OK);
     }
-    public async Task AddCategoriesToProductAsync(ProductToCategoriesViewModel model) 
+    public async Task<IManagerActionResult> AddCategoriesToProductAsync(ProductToCategoriesViewModel model) 
     {
         var product = await _dbInfo.Products.FirstOrDefaultAsync(x => x.Id == model.ProductId);
         if(product is null || model.CategoriesIds is null)
-            return;
+            return new ManagerActionResult(ResultEnum.NotFound);
         _dbInfo.Products.Update(product);
         product.Categories.AddRange(_dbInfo.Categories.Where(x => model.CategoriesIds.Contains(x.Id)));
         await _dbInfo.SaveChangesAsync();
+        return new ManagerActionResult(ResultEnum.OK);
     }
 
     private ProductWithCategoryAndBarcodeViewModel GetProductAllInfo(Product product) 

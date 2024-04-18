@@ -6,7 +6,8 @@ using Server.Logic.Abstract.Managers;
 namespace Server.Controllers;
 
 [ApiController]
-public class LoginController : Controller{
+public class LoginController : Controller
+{
 
     private const string _controllerRoute = "/login";
     private readonly ILoginManager _loginManager;
@@ -20,15 +21,11 @@ public class LoginController : Controller{
     [AllowAnonymous]
     [Route($"{_controllerRoute}")]
     public async Task<IActionResult> Login(LoginRequest login)
-    {
-        return Ok(await _loginManager.LoginAsync(login));
-    }
+        => (await _loginManager.LoginAsync(login)).MapToActionResult();
 
     [HttpPost]
     [AllowAnonymous]
     [Route($"{_controllerRoute}/register")]
     public async Task<IActionResult> Register(LoginRequest login) 
-    {
-        return Ok(await _loginManager.RegisterAsync(login));
-    }
+        => (await _loginManager.RegisterAsync(login)).MapToActionResult();
 }
