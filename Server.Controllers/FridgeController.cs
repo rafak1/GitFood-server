@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.ViewModels.Fridge;
-using Server.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Server.Logic.Abstract.Managers;
 

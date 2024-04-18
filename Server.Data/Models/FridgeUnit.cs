@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Server.Data.Models;
+﻿namespace Server.Data.Models;
 
 public partial class FridgeUnit
 {

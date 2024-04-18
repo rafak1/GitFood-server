@@ -1,3 +1,5 @@
+namespace Server.Data.Models;
+
 public enum Units{
     ml,
     l,

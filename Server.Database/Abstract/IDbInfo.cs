@@ -1,9 +1,7 @@
-
-using Server.Data.Models;
-
 namespace Server.Database.Abstract;
 
-public interface IDbInfo 
+public interface IDbInfo : IDbTables
 {
     Task<int> SaveChangesAsync();
+    void Update<T>(T entity) where T : class;
 }

@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using Server.Logic.Abstract.Authentication;
-using Server.Logic.Abstract.Token;
-using Server.Data.Models;
 using Server.Logic.Abstract.Managers;
 
 namespace Server.Controllers;

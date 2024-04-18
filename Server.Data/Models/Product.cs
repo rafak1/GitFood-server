@@ -1,5 +1,4 @@
-﻿
-namespace Server.Data.Models;
+﻿namespace Server.Data.Models;
 
 public partial class Product
 {
