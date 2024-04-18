@@ -5,7 +5,7 @@ using Server.Logic.Abstract.Authentication;
 
 namespace Server.Logic.Authentication;
 
-public class TokenGenerator : ITokenGenerator
+internal class TokenGenerator : ITokenGenerator
 {
     private readonly ITokenConfigProvider _tokenConfigProvider;
 

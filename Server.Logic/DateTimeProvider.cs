@@ -2,7 +2,7 @@ using Server.Logic.Abstract;
 
 namespace Server.Logic;
 
-public class DateTimeProvider : IDateTimeProvider
+internal class DateTimeProvider : IDateTimeProvider
 {
     private readonly DateTime _baseTime = new(1970, 1, 1);
 

@@ -4,7 +4,7 @@ using Server.Logic.Abstract.Token;
 
 namespace Server.Logic.Token;
 
-public class TokenStorage : ITokenStorage
+internal class TokenStorage : ITokenStorage
 {
     private readonly Dictionary<string, (long CreationTime , string User)> _tokens = new Dictionary<string, (long , string)>();
     private readonly ITokenConfigProvider _tokenConfigProvider;

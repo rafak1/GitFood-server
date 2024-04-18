@@ -2,7 +2,7 @@ using Server.Logic.Abstract.Authentication;
 
 namespace Server.Logic.Authentication;
 
-public class PasswordChecker : IPasswordChecker
+internal class PasswordChecker : IPasswordChecker
 {
     private const int _minPasswordLength = 5;
     private const int _minLoginLength = 5;

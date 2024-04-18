@@ -10,7 +10,7 @@ using NuGet.Packaging;
 
 namespace Server.Logic.Managers;
 
-public class ProductManager : IProductManager
+internal class ProductManager : IProductManager
 {
     private readonly GitfoodContext _dbInfo;
     private const string ControllerPart = "products";

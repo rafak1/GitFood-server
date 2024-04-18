@@ -3,7 +3,7 @@ using Server.Logic.Abstract.Authentication;
 
 namespace Server.Logic.Authentication;
 
-public class TokenConfigProvider : ITokenConfigProvider
+internal class TokenConfigProvider : ITokenConfigProvider
 {
     private readonly IConfiguration _config;
 
