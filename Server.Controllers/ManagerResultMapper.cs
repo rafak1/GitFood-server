@@ -1,4 +1,3 @@
-using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Server.Logic.Abstract;
 
@@ -22,16 +21,7 @@ internal static class ManagerResultMapper
     {
         return new ObjectResult(data)
         {
-            StatusCode = result switch
-            {
-                ResultEnum.OK => (int)HttpStatusCode.OK,
-                ResultEnum.NotFound => (int)HttpStatusCode.NotFound,
-                ResultEnum.Conflict => (int)HttpStatusCode.Conflict,
-                ResultEnum.Unauthorizated => (int)HttpStatusCode.Unauthorized,
-                ResultEnum.BadRequest => (int)HttpStatusCode.BadRequest,
-                _ => throw new InvalidOperationException("Unexpected Http status to map")
-            }
+            StatusCode = result.MapStatusCodeForResultEnum()
         };
     }
-
 }
