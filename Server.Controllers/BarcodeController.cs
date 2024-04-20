@@ -21,7 +21,7 @@ public class BarcodeController : Controller
     public BarcodeController(ITokenStorage tokenStorage, IBarcodeManager barcodeManager)
     {
         _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));   
-        _barcodeManger = _barcodeManger ?? throw new ArgumentNullException(nameof(_barcodeManger));
+        _barcodeManger = barcodeManager ?? throw new ArgumentNullException(nameof(barcodeManager));
     }
 
     [HttpPost]
