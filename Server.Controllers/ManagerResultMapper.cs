@@ -10,8 +10,7 @@ internal static class ManagerResultMapper
 
     public static IActionResult MapToActionResult<T>(this IManagerActionResult<T> managerActionResult)
     {
-        object data;
-        data = managerActionResult.EnumCode == ResultEnum.OK 
+        object data = managerActionResult.EnumCode == ResultEnum.OK 
             ? managerActionResult.Result 
             : managerActionResult.ErrorMessage;
         return MapResultCodeWithData(managerActionResult.EnumCode, data);
