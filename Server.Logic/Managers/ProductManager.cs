@@ -97,6 +97,14 @@ internal class ProductManager : IProductManager
 
     public async Task<IManagerActionResult> AddProductWithBarcodeAsync(ProductWithBarcodeViewModel productBarcodeViewModel, string user)
     {
+        /*
+            Problemy:
+                 -> brak transakcyjności, 
+                 -> productWithId będzie miało id pierwszego produktu o takiej nazwie i opisie, a nie tego, który dodaliśmy
+                 -> brzydkie
+            Możliwe rozwiązanie:
+                 -> Jedno wielkie zapytanie SQL
+        */
         await _dbInfo.Products.AddAsync(new Product{
             Name = productBarcodeViewModel.Name,
             Description = productBarcodeViewModel.Description
