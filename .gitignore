@@ -1,5 +1,7 @@
-/bin
-/obj
+/bin*
+/obj*
+/*/bin
+/*/obj
 LocalDatabase.db
 appsettings.json
 appsettings.Development.json
