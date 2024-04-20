@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.Logic.Abstract.Managers;
+using Server.Logic.Abstract.Token;
 using Server.ViewModels.Products;
 
 namespace Server.Controllers;
@@ -10,17 +11,34 @@ namespace Server.Controllers;
 public class ProductController : Controller
 {
     private readonly IProductManager _productManager;
+
+    private readonly ITokenStorage _tokenStorage;
+
     private const string ControllerPart = "/products";
 
-    public ProductController(IProductManager productManager)
+    private const int _bearerOffset = 7;
+
+    public ProductController(IProductManager productManager, ITokenStorage tokenStorage)
     {
         _productManager = productManager ?? throw new ArgumentNullException(nameof(productManager));
+        _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));
     }
 
     [HttpPost]
     [Route($"{ControllerPart}/add")]
     public async Task<IActionResult> AddProduct(ProductViewModel product) 
         => (await _productManager.AddProductAsync(product)).MapToActionResult();
+
+    [HttpPost]
+    [Route($"{ControllerPart}/addWithBarcode")]
+    public async Task<IActionResult> AddProductWithBarcode(ProductWithBarcodeViewModel product)
+    { 
+        var user = _tokenStorage.GetUser(Request.Headers.Authorization.ToString()[_bearerOffset..]);
+        if(user == null) 
+            return BadRequest("No user found assigned to this token");
+
+        return (await _productManager.AddProductWithBarcodeAsync(product, user)).MapToActionResult();
+    }
 
     [HttpGet]
     [Route($"{ControllerPart}/get")]

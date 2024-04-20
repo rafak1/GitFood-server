@@ -94,4 +94,24 @@ internal class ProductManager : IProductManager
             ).ToArray()
         };
     }
+
+    public async Task<IManagerActionResult> AddProductWithBarcodeAsync(ProductWithBarcodeViewModel productBarcodeViewModel, string user)
+    {
+        await _dbInfo.Products.AddAsync(new Product{
+            Name = productBarcodeViewModel.Name,
+            Description = productBarcodeViewModel.Description
+        });
+        await _dbInfo.SaveChangesAsync();
+        var productWithId = await _dbInfo.Products.FirstOrDefaultAsync(x => x.Name == productBarcodeViewModel.Name && x.Description == productBarcodeViewModel.Description);
+        if(productWithId is null)
+            return new ManagerActionResult(ResultEnum.BadRequest);
+        await _dbInfo.Barcodes.AddAsync(new Barcode{
+            Key = productBarcodeViewModel.Barcode,
+            ProductId = productWithId.Id,
+            User = user
+        });
+        await _dbInfo.SaveChangesAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
 }

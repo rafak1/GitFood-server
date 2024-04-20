@@ -32,7 +32,7 @@ public class BarcodeController : Controller
         if(user == null) 
             return BadRequest("No user found assigned to this token");
 
-        return (await _barcodeManger.AddBarcodeAsync(barcode)).MapToActionResult();
+        return (await _barcodeManger.AddBarcodeAsync(barcode, user)).MapToActionResult();
     }
 
     [HttpGet]
