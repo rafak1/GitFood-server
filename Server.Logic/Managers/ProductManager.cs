@@ -122,4 +122,17 @@ internal class ProductManager : IProductManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
+    public async Task<IManagerActionResult<ProductWithCategoryAndBarcodeViewModel>> GetProductByBarcodeAsync(string barcode, string user)
+    {
+        var dbBarcode = await _dbInfo.Barcodes.FirstOrDefaultAsync(x => x.Key == barcode && x.User == user);
+        if(dbBarcode is null)
+            return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(null, ResultEnum.NotFound);
+
+        var product = await _dbInfo.Products.FirstOrDefaultAsync(x => x.Id == dbBarcode.ProductId);
+        if(product is null)
+            return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(null, ResultEnum.NotFound);
+        return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(GetProductAllInfo(product), ResultEnum.OK);
+
+
+    }
 }

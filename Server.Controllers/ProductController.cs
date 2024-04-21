@@ -41,6 +41,17 @@ public class ProductController : Controller
     }
 
     [HttpGet]
+    [Route($"{ControllerPart}/getByBarcode")]
+    public async Task<IActionResult> GetProductByBarcode(String barcode) 
+    {
+        var user = _tokenStorage.GetUser(Request.Headers.Authorization.ToString()[_bearerOffset..]);
+        if(user == null) 
+            return BadRequest("No user found assigned to this token");
+
+        return (await _productManager.GetProductByBarcodeAsync(barcode, user)).MapToActionResult();
+    }
+
+    [HttpGet]
     [Route($"{ControllerPart}/get")]
     public async Task<IActionResult> GetProducts(string name) 
         => (await _productManager.GetProductsAsync(name)).MapToActionResult();
