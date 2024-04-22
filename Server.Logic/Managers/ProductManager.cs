@@ -97,14 +97,8 @@ internal class ProductManager : IProductManager
 
     public async Task<IManagerActionResult> AddProductWithBarcodeAsync(ProductWithBarcodeViewModel productBarcodeViewModel, string user)
     {
-        /*
-            Problemy:
-                 -> brak transakcyjności, 
-                 -> productWithId będzie miało id pierwszego produktu o takiej nazwie i opisie, a nie tego, który dodaliśmy
-                 -> brzydkie
-            Możliwe rozwiązanie:
-                 -> Jedno wielkie zapytanie SQL
-        */
+        using var transaction = await _dbInfo.Database.BeginTransactionAsync();
+
         await _dbInfo.Products.AddAsync(new Product{
             Name = productBarcodeViewModel.Name,
             Description = productBarcodeViewModel.Description
@@ -119,9 +113,12 @@ internal class ProductManager : IProductManager
             User = user
         });
         await _dbInfo.SaveChangesAsync();
+
+        await transaction.CommitAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
 
+    // TODO: TO BE DEPRICATED
     public async Task<IManagerActionResult<ProductWithCategoryAndBarcodeViewModel>> GetProductByBarcodeAsync(string barcode, string user)
     {
         var dbBarcode = await _dbInfo.Barcodes.FirstOrDefaultAsync(x => x.Key == barcode && x.User == user);
@@ -132,7 +129,5 @@ internal class ProductManager : IProductManager
         if(product is null)
             return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(null, ResultEnum.NotFound);
         return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(GetProductAllInfo(product), ResultEnum.OK);
-
-
     }
 }
