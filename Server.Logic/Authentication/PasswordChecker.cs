@@ -10,7 +10,7 @@ internal class PasswordChecker : IPasswordChecker
     public bool IsCorrectPassword(string password) 
         => password.Length > _minPasswordLength &&
             password.Any(char.IsDigit) &&
-            password.Any(char.IsWhiteSpace);
+            !password.Any(char.IsWhiteSpace);
 
     public bool isCorrectLogin(string login) 
         => login.Length > _minLoginLength && !login.Any(char.IsWhiteSpace);

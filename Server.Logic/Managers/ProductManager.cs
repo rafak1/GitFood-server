@@ -94,4 +94,40 @@ internal class ProductManager : IProductManager
             ).ToArray()
         };
     }
+
+    public async Task<IManagerActionResult> AddProductWithBarcodeAsync(ProductWithBarcodeViewModel productBarcodeViewModel, string user)
+    {
+        using var transaction = await _dbInfo.Database.BeginTransactionAsync();
+
+        await _dbInfo.Products.AddAsync(new Product{
+            Name = productBarcodeViewModel.Name,
+            Description = productBarcodeViewModel.Description
+        });
+        await _dbInfo.SaveChangesAsync();
+        var productWithId = await _dbInfo.Products.FirstOrDefaultAsync(x => x.Name == productBarcodeViewModel.Name && x.Description == productBarcodeViewModel.Description);
+        if(productWithId is null)
+            return new ManagerActionResult(ResultEnum.BadRequest);
+        await _dbInfo.Barcodes.AddAsync(new Barcode{
+            Key = productBarcodeViewModel.Barcode,
+            ProductId = productWithId.Id,
+            User = user
+        });
+        await _dbInfo.SaveChangesAsync();
+
+        await transaction.CommitAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    // TODO: TO BE DEPRICATED
+    public async Task<IManagerActionResult<ProductWithCategoryAndBarcodeViewModel>> GetProductByBarcodeAsync(string barcode, string user)
+    {
+        var dbBarcode = await _dbInfo.Barcodes.FirstOrDefaultAsync(x => x.Key == barcode && x.User == user);
+        if(dbBarcode is null)
+            return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(null, ResultEnum.NotFound);
+
+        var product = await _dbInfo.Products.FirstOrDefaultAsync(x => x.Id == dbBarcode.ProductId);
+        if(product is null)
+            return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(null, ResultEnum.NotFound);
+        return new ManagerActionResult<ProductWithCategoryAndBarcodeViewModel>(GetProductAllInfo(product), ResultEnum.OK);
+    }
 }

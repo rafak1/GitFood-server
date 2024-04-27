@@ -71,9 +71,13 @@ internal class FridgeManager : IFridgeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<Fridge>> GetFridgeAsync(string login)
+    public async Task<IManagerActionResult<Fridge[]>> GetFridgeAsync(string login)
     {
-        var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.UserLogin == login);
-        return new ManagerActionResult<Fridge>(fridge, ResultEnum.OK);
+        var fridge = await _dbInfo.Fridges
+            .Include(x => x.FridgeUnits)
+            .Include(x => x.Product)
+            .Where(x => x.UserLogin == login)
+            .ToArrayAsync();
+        return new ManagerActionResult<Fridge[]>(fridge, ResultEnum.OK);
     }
 }

@@ -16,12 +16,13 @@ internal class BarcodeManager : IBarcodeManager
         _dbInfo = dbInfo ?? throw new ArgumentNullException(nameof(dbInfo));
     }
 
-    public async Task<IManagerActionResult> AddBarcodeAsync(BarcodeViewModel barcode)
+    public async Task<IManagerActionResult> AddBarcodeAsync(BarcodeViewModel barcode, string user)
     {
         await _dbInfo.Barcodes.AddAsync(new Barcode
         {
             Key = barcode.BarcodeNumber,
             ProductId = barcode.ProductId,
+            User = user
         });
         await _dbInfo.SaveChangesAsync();
         return new ManagerActionResult(ResultEnum.OK);

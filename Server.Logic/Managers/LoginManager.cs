@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using Server.Logic.Abstract.Managers;
 using Server.Logic.Abstract.Authentication;
@@ -6,6 +5,7 @@ using Server.Logic.Abstract.Token;
 using Server.Data.Models;
 using Server.Database;
 using Server.Logic.Abstract;
+using Server.ViewModels.Login;
 
 namespace Server.Logic.Managers;
 
@@ -25,29 +25,29 @@ internal class LoginManager : ILoginManager
         _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));
     }
 
-    public async Task<IManagerActionResult<string>> LoginAsync(LoginRequest login)
+    public async Task<IManagerActionResult<string>> LoginAsync(LoginViewModel login)
     {
         var isCorrect = await _dbInfo.Users.FirstOrDefaultAsync(
-            x => x.Login == login.Email && x.Password == login.Password);
+            x => x.Login == login.Login && x.Password == login.Password);
 
         if(isCorrect == null) 
             return new ManagerActionResult<string>(null, ResultEnum.BadRequest, _InvalidLoginOrPasswordMessage);
         else
         {
             var token = _tokenGenerator.GrantToken();
-            _tokenStorage.AddToken(token, login.Email);
+            _tokenStorage.AddToken(token, login.Login);
             return new ManagerActionResult<string>(token, ResultEnum.OK);
         }
     }
 
-    public async Task<IManagerActionResult<string>> RegisterAsync(LoginRequest login) 
+    public async Task<IManagerActionResult<string>> RegisterAsync(LoginViewModel login) 
     {
-        if(!_checker.IsCorrectPassword(login.Password) || !_checker.isCorrectLogin(login.Email))
+        if(!_checker.IsCorrectPassword(login.Password) || !_checker.isCorrectLogin(login.Login))
             return new ManagerActionResult<string>(null, ResultEnum.BadRequest, _InvalidLoginOrPasswordMessage);
 
         await _dbInfo.Users.AddAsync(new User
         {
-            Login = login.Email,
+            Login = login.Login,
             Password = login.Password
         });
         await _dbInfo.SaveChangesAsync();
@@ -55,7 +55,7 @@ internal class LoginManager : ILoginManager
         //Error handling?
         
         var token = _tokenGenerator.GrantToken();
-        _tokenStorage.AddToken(token, login.Email);
+        _tokenStorage.AddToken(token, login.Login);
         return new ManagerActionResult<string>(token, ResultEnum.OK);
     }
 }
