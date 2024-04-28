@@ -1,16 +1,25 @@
-﻿namespace Server.Data.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Server.DataModel;
 
 public partial class Product
 {
-    public int Id { get; set; }
+    public string Name { get; set; }
 
     public string Description { get; set; }
 
-    public string Name { get; set; }
+    public string Barcode { get; set; }
 
-    public virtual ICollection<Barcode> Barcodes { get; set; } = new List<Barcode>();
+    public string User { get; set; }
 
-    public virtual ICollection<Fridge> Fridges { get; set; } = new List<Fridge>();
+    public int Id { get; set; }
 
-    public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
+    public int? Category { get; set; }
+
+    public double? Quantity { get; set; }
+
+    public virtual Category CategoryNavigation { get; set; }
+
+    public virtual ICollection<FridgeProduct> FridgeProducts { get; set; } = new List<FridgeProduct>();
 }
