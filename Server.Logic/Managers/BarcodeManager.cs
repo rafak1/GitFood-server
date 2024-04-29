@@ -43,11 +43,6 @@ internal class BarcodeManager : IBarcodeManager
 
     public async Task<IManagerActionResult<IDictionary<string, Barcode>>> SuggestBarcodeAsync(string barcodeName) 
     {
-        var barcodes = (await _dbInfo.Barcodes
-            .Where(x => x.Key == barcodeName)
-            .GroupBy(x => x.Key)
-            .OrderByDescending(x => x.Count())
-            .FirstOrDefaultAsync()).ToDictionary(x => x.Key);
-        return new ManagerActionResult<IDictionary<string, Barcode>>(barcodes, ResultEnum.OK);
+        
     }
 }

@@ -8,7 +8,7 @@ namespace Server.Controllers;
 
 [Authorize]
 [ApiController]
-public class BarcodeController : Controller
+public class BarcodeController : BaseController
 {
     private const string _controllerRoute = "/barcode";
 
