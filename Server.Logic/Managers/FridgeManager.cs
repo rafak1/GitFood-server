@@ -16,68 +16,75 @@ internal class FridgeManager : IFridgeManager
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
     }
 
-    public async Task<IManagerActionResult> AddProductToFridgeAsync(FridgeProductViewModel fridgeProduct) 
+    public async Task<IManagerActionResult> UpdateProductInFridgeAsync(int fridgeId, int productId, int quantity, string user) 
     {
+        var transaction = await _dbInfo.Database.BeginTransactionAsync();
 
-        if (!Enum.IsDefined(typeof(Units), fridgeProduct.Unit))
-            return new ManagerActionResult(ResultEnum.BadRequest);
-
-        await _dbInfo.Fridges.AddAsync(new Fridge
-        {
-            ProductId = fridgeProduct.ProductId,
-            UserLogin = fridgeProduct.Login,
-            FridgeUnits =
-            [
-                new FridgeUnit
-                {
-                    Unit = fridgeProduct.Unit,
-                    Quantity = fridgeProduct.Quantity
-                }
-            ]
-        });
-        await _dbInfo.SaveChangesAsync();
-        return new ManagerActionResult(ResultEnum.OK);
-    }
-
-    public async Task<IManagerActionResult> DeleteProductFromFridgeAsync(int fridgeProductId) 
-    {
-        await _dbInfo.FridgeUnits.Where(x => x.FridgeProductId == fridgeProductId).ExecuteDeleteAsync();
-        await _dbInfo.Fridges.Where(x => x.Id == fridgeProductId).ExecuteDeleteAsync();
-        return new ManagerActionResult(ResultEnum.OK);
-    }
-
-    public async Task<IManagerActionResult> UpdateProductInFridgeAsync(FridgeProductViewModel fridgeProduct) 
-    {
-        if (!Enum.IsDefined(typeof(Units), fridgeProduct.Unit))
-            return new ManagerActionResult(ResultEnum.BadRequest);
-
-        var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.ProductId == fridgeProduct.ProductId && x.UserLogin == fridgeProduct.Login);
+        var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.Id == fridgeId);
         if (fridge is null)
             return new ManagerActionResult(ResultEnum.NotFound);
 
-        if(fridge.FridgeUnits.Any(x => x.Unit == fridgeProduct.Unit))
+        if(fridge.FridgeProducts.Any(x => x.ProductId == productId))
         {
-            fridge.FridgeUnits.First(x => x.Unit == fridgeProduct.Unit).Quantity = fridgeProduct.Quantity;
+            var currentAmmount = fridge.FridgeProducts.First(x => x.ProductId == productId).Ammount;
+            if(currentAmmount + quantity < 0)
+            {
+                return new ManagerActionResult(ResultEnum.BadRequest);
+            }
+            else if(currentAmmount + quantity == 0)
+            {
+                fridge.FridgeProducts.Remove(fridge.FridgeProducts.First(x => x.ProductId == productId));
+            }
+            else
+            {
+                fridge.FridgeProducts.First(x => x.ProductId == productId).Ammount += quantity;
+            }
         }
         else
         {
-            fridge.FridgeUnits.Add(new FridgeUnit
+            fridge.FridgeProducts.Add(new FridgeProduct
             {
-                Unit = fridgeProduct.Unit,
-                Quantity = fridgeProduct.Quantity
+                ProductId = productId,
+                Ammount = quantity,
+                FridgeId = fridgeId
             });
         }
         await _dbInfo.SaveChangesAsync();
+        await transaction.CommitAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<Fridge[]>> GetFridgeAsync(string login)
+    public async Task<IManagerActionResult<Fridge>> GetFridgeAsync(int fridgeId)
     {
-        var fridge = await _dbInfo.Fridges
-            .Include(x => x.FridgeUnits)
-            .Include(x => x.Product)
-            .Where(x => x.UserLogin == login)
-            .ToArrayAsync();
-        return new ManagerActionResult<Fridge[]>(fridge, ResultEnum.OK);
+        var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.Id == fridgeId);
+        return new ManagerActionResult<Fridge>(fridge, ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult<int>> CreateFridgeAsync(string name, string login)
+    {
+        var transaction = await _dbInfo.Database.BeginTransactionAsync();
+
+        await _dbInfo.Fridges.AddAsync(new Fridge
+        {
+            Name = name,
+            UserLogin = login
+        });
+        await _dbInfo.SaveChangesAsync();
+        var id = (await _dbInfo.Fridges.FirstAsync(x => x.Name == name && x.UserLogin == login)).Id;
+
+        await transaction.CommitAsync();
+        return new ManagerActionResult<int>(id, ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult> DeleteFridgeAsync(int fridgeId)
+    {
+        await _dbInfo.Fridges.Where(x => x.Id == fridgeId).ExecuteDeleteAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult<Fridge[]>> GetAllFridgesAsync(string login)
+    {
+        var fridges = await _dbInfo.Fridges.Where(x => x.UserLogin == login).ToArrayAsync();
+        return new ManagerActionResult<Fridge[]>(fridges, ResultEnum.OK);
     }
 }

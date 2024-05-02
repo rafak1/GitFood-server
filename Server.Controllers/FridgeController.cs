@@ -2,42 +2,63 @@ using Microsoft.AspNetCore.Mvc;
 using Server.ViewModels.Fridge;
 using Microsoft.AspNetCore.Authorization;
 using Server.Logic.Abstract.Managers;
+using Server.Logic.Abstract.Token;
 
 namespace Server.Controllers;
 
 [Authorize]
 [ApiController]
-public class FridgeController : Controller
+public class FridgeController : BaseController
 {
     private const string _controllerRoute = "/fridge";
     private readonly IFridgeManager _fridgeManager;
 
-    public FridgeController(IFridgeManager fridgeManager)
+    public FridgeController(IFridgeManager fridgeManager, ITokenStorage tokenStorage) : base(tokenStorage)
     {
         _fridgeManager = fridgeManager ?? throw new ArgumentNullException(nameof(fridgeManager));
     }
 
     [HttpPost]
-    [Route($"{_controllerRoute}/add")]
-    public async Task<IActionResult> AddProductToFridge(FridgeProductViewModel fridgeProduct) 
-        => (await _fridgeManager.AddProductToFridgeAsync(fridgeProduct)).MapToActionResult();
+    [Route($"{_controllerRoute}/create")]
+    public async Task<IActionResult> CreateFridge(string name) 
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
 
-
-    [HttpDelete]
-    [Route($"{_controllerRoute}/delete")]
-    public async Task<IActionResult> DeleteProductFromFridge(int fridgeProductId) 
-        => (await _fridgeManager.DeleteProductFromFridgeAsync(fridgeProductId)).MapToActionResult();
+        return (await _fridgeManager.CreateFridgeAsync(name, user)).MapToActionResult();
+    }
 
 
     [HttpPatch]
-    [Route($"{_controllerRoute}/update")]
-    public async Task<IActionResult> UpdateProductInFridge(FridgeProductViewModel fridgeProduct) 
-        => (await _fridgeManager.UpdateProductInFridgeAsync(fridgeProduct)).MapToActionResult();
+    [Route($"{_controllerRoute}/updateProductQuantity")]
+    public async Task<IActionResult> UpdateProductInFridge(int fridgeId, int productId, int quantity){
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _fridgeManager.UpdateProductInFridgeAsync(fridgeId, productId, quantity, user)).MapToActionResult();
+    }
+
+    [HttpDelete]
+    [Route($"{_controllerRoute}/remove")]
+    public async Task<IActionResult> RemoveFridge(int fridgeId) 
+        => (await _fridgeManager.DeleteFridgeAsync(fridgeId)).MapToActionResult();
 
 
     [HttpGet]
     [Route($"{_controllerRoute}/get")]
-    public async Task<IActionResult> GetFridge(string login) 
-        => (await _fridgeManager.GetFridgeAsync(login)).MapToActionResult();
+    public async Task<IActionResult> GetFridge(int fridgeId) 
+        => (await _fridgeManager.GetFridgeAsync(fridgeId)).MapToActionResult();
+
+    [HttpGet]
+    [Route($"{_controllerRoute}/getAll")]
+    public async Task<IActionResult> GetAllFridges(){
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _fridgeManager.GetAllFridgesAsync(user)).MapToActionResult();
+    }
 
 }

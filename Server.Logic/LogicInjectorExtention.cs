@@ -26,11 +26,13 @@ public static class LogicInjectorExtention
 
     private static IServiceCollection AddManagers(this IServiceCollection injector)
     {
-        return injector.AddScoped<IBarcodeManager, BarcodeManager>()
-            .AddScoped<IProductManager, ProductManager>()
+        return injector.AddScoped<IProductManager, ProductManager>()
             .AddScoped<ICategoryManager, CategoryManager>()
             .AddScoped<IFridgeManager, FridgeManager>()
-            .AddScoped<ILoginManager, LoginManager>();
+            .AddScoped<ILoginManager, LoginManager>()
+            .AddScoped<IRecipeManager, RecipeManager>()
+            .AddScoped<IFollowerManager, FollowerManager>();
+
     }
 
     private static IServiceCollection AddAuthentication(this IServiceCollection injector)
