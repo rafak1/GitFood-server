@@ -12,8 +12,13 @@ public class BaseController : Controller
         _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));
     }
 
-    public string GetUser(string token) 
+    protected string GetUser(string token) 
     {
         return _tokenStorage.GetUser(token[_bearerOffset..]);
+    }
+
+    protected void RemoveUser(string token) 
+    {
+        _tokenStorage.RemoveUser(token[_bearerOffset..]);
     }
 }

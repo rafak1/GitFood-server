@@ -44,29 +44,26 @@ public class ProductController : BaseController
     [HttpDelete]
     [Route($"{_controllerRoute}/delete")]
     public async Task<IActionResult> DeleteProduct(int id)
-    {
-        return (await _productManager.DeleteProductAsync(id)).MapToActionResult();
-    }
+        => (await _productManager.DeleteProductAsync(id)).MapToActionResult();
 
     [HttpGet]
     [Route($"{_controllerRoute}/getById")]
     public async Task<IActionResult> GetProductById(int id)
-    {
-        return (await _productManager.GetProductByIdAsync(id)).MapToActionResult();
-    }
+        => (await _productManager.GetProductByIdAsync(id)).MapToActionResult();
 
     [HttpGet]
     [Route($"{_controllerRoute}/getByBarcode")]
     public async Task<IActionResult> GetProductByBarcode(string barcode)
     {
-        return (await _productManager.GetProductsByBarcodeAsync(barcode)).MapToActionResult();
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest("No user found assigned to this token");
+        return (await _productManager.GetProductByBarcodeAsync(barcode, user)).MapToActionResult();
     }
 
     [HttpGet]
     [Route($"{_controllerRoute}/suggest")]
     public async Task<IActionResult> SuggestProduct(string barcode)
-    {
-        return (await _productManager.SuggestProductAsync(barcode)).MapToActionResult();
-    }
+        => (await _productManager.SuggestProductAsync(barcode)).MapToActionResult();
 
 }

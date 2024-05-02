@@ -1,3 +1,5 @@
+using Server.ViewModels.Categories;
+
 namespace Server.ViewModels.Products;
 
 public class ProductWithCategoryViewModel

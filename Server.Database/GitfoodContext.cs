@@ -1,7 +1,6 @@
 ﻿using Server.Data.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
-using Server.DataModel;
 
 namespace Server.Database;
 
@@ -31,15 +30,11 @@ public partial class GitfoodContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
-    public virtual DbSet<ReciepesCategory> ReciepesCategories { get; set; }
-
     public virtual DbSet<Recipe> Recipes { get; set; }
 
     public virtual DbSet<RecipeChild> RecipeChildren { get; set; }
 
     public virtual DbSet<RecipesComment> RecipesComments { get; set; }
-
-    public virtual DbSet<RecipesLike> RecipesLikes { get; set; }
 
     public virtual DbSet<RecipiesImage> RecipiesImages { get; set; }
 
@@ -50,8 +45,6 @@ public partial class GitfoodContext : DbContext
     public virtual DbSet<ShoppingListProduct> ShoppingListProducts { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
-
-    public virtual DbSet<UsersFollow> UsersFollows { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
     {
@@ -184,24 +177,6 @@ public partial class GitfoodContext : DbContext
                 .HasConstraintName("products_category_fkey");
         });
 
-        modelBuilder.Entity<ReciepesCategory>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("reciepes_categories");
-
-            entity.Property(e => e.Category).HasColumnName("category");
-            entity.Property(e => e.Reciepe).HasColumnName("reciepe");
-
-            entity.HasOne(d => d.CategoryNavigation).WithMany()
-                .HasForeignKey(d => d.Category)
-                .HasConstraintName("reciepes_categories_category_fkey");
-
-            entity.HasOne(d => d.ReciepeNavigation).WithMany()
-                .HasForeignKey(d => d.Reciepe)
-                .HasConstraintName("reciepes_categories_reciepe_fkey");
-        });
-
         modelBuilder.Entity<Recipe>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("recipes_pkey");
@@ -228,6 +203,25 @@ public partial class GitfoodContext : DbContext
                 .HasForeignKey(d => d.Author)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("recipes_author_fkey");
+
+            entity.HasMany(d => d.Categories).WithMany(p => p.Reciepes)
+                .UsingEntity<Dictionary<string, object>>(
+                    "ReciepesCategory",
+                    r => r.HasOne<FoodCategory>().WithMany()
+                        .HasForeignKey("Category")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("reciepes_categories_category_fkey"),
+                    l => l.HasOne<Recipe>().WithMany()
+                        .HasForeignKey("Reciepe")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("reciepes_categories_reciepe_fkey"),
+                    j =>
+                    {
+                        j.HasKey("Reciepe", "Category").HasName("reciepes_categories_pkey");
+                        j.ToTable("reciepes_categories");
+                        j.IndexerProperty<int>("Reciepe").HasColumnName("reciepe");
+                        j.IndexerProperty<int>("Category").HasColumnName("category");
+                    });
         });
 
         modelBuilder.Entity<RecipeChild>(entity =>
@@ -266,26 +260,6 @@ public partial class GitfoodContext : DbContext
                 .HasConstraintName("recipes_comments_user_fkey");
         });
 
-        modelBuilder.Entity<RecipesLike>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("recipes_likes");
-
-            entity.Property(e => e.Recipe).HasColumnName("recipe");
-            entity.Property(e => e.User)
-                .HasColumnType("character varying")
-                .HasColumnName("user");
-
-            entity.HasOne(d => d.RecipeNavigation).WithMany()
-                .HasForeignKey(d => d.Recipe)
-                .HasConstraintName("recipes_likes_recipe_fkey");
-
-            entity.HasOne(d => d.UserNavigation).WithMany()
-                .HasForeignKey(d => d.User)
-                .HasConstraintName("recipes_likes_user_fkey");
-        });
-
         modelBuilder.Entity<RecipiesImage>(entity =>
         {
             entity.HasKey(e => new { e.Name, e.Recipe }).HasName("recipies_images_pkey");
@@ -308,19 +282,20 @@ public partial class GitfoodContext : DbContext
 
         modelBuilder.Entity<RecipiesIngredient>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("recipies_ingredients");
+            entity.HasKey(e => new { e.Reciepie, e.Category }).HasName("recipies_ingredients_pkey");
 
+            entity.ToTable("recipies_ingredients");
+
+            entity.Property(e => e.Reciepie).HasColumnName("reciepie");
             entity.Property(e => e.Category).HasColumnName("category");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
-            entity.Property(e => e.Reciepie).HasColumnName("reciepie");
 
-            entity.HasOne(d => d.CategoryNavigation).WithMany()
+            entity.HasOne(d => d.CategoryNavigation).WithMany(p => p.RecipiesIngredients)
                 .HasForeignKey(d => d.Category)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("recipies_ingredients_category_fkey");
 
-            entity.HasOne(d => d.ReciepieNavigation).WithMany()
+            entity.HasOne(d => d.ReciepieNavigation).WithMany(p => p.RecipiesIngredients)
                 .HasForeignKey(d => d.Reciepie)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("recipies_ingredients_reciepie_fkey");
@@ -333,6 +308,9 @@ public partial class GitfoodContext : DbContext
             entity.ToTable("shopping_list");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasColumnType("character varying")
+                .HasColumnName("name");
             entity.Property(e => e.User)
                 .HasColumnType("character varying")
                 .HasColumnName("user");
@@ -344,20 +322,22 @@ public partial class GitfoodContext : DbContext
 
         modelBuilder.Entity<ShoppingListProduct>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("shopping_list_products");
+            entity.HasKey(e => new { e.ShoppingListId, e.Category }).HasName("shopping_list_products_pkey");
 
+            entity.ToTable("shopping_list_products");
+
+            entity.Property(e => e.ShoppingListId).HasColumnName("shopping_list_id");
             entity.Property(e => e.Category).HasColumnName("category");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
-            entity.Property(e => e.ShoppingListId).HasColumnName("shopping_list_id");
 
-            entity.HasOne(d => d.CategoryNavigation).WithMany()
+            entity.HasOne(d => d.CategoryNavigation).WithMany(p => p.ShoppingListProducts)
                 .HasForeignKey(d => d.Category)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("shopping_list_products_category_fkey");
 
-            entity.HasOne(d => d.ShoppingList).WithMany()
+            entity.HasOne(d => d.ShoppingList).WithMany(p => p.ShoppingListProducts)
                 .HasForeignKey(d => d.ShoppingListId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("shopping_list_products_shopping_list_id_fkey");
         });
 
@@ -374,28 +354,73 @@ public partial class GitfoodContext : DbContext
                 .IsRequired()
                 .HasColumnType("character varying")
                 .HasColumnName("password");
-        });
 
-        modelBuilder.Entity<UsersFollow>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToTable("users_follows");
+            entity.HasMany(d => d.Follows).WithMany(p => p.Users)
+                .UsingEntity<Dictionary<string, object>>(
+                    "UsersFollow",
+                    r => r.HasOne<User>().WithMany()
+                        .HasForeignKey("Follows")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("users_follows_follows_fkey"),
+                    l => l.HasOne<User>().WithMany()
+                        .HasForeignKey("User")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("users_follows_user_fkey"),
+                    j =>
+                    {
+                        j.HasKey("User", "Follows").HasName("users_follows_pkey");
+                        j.ToTable("users_follows");
+                        j.IndexerProperty<string>("User")
+                            .HasColumnType("character varying")
+                            .HasColumnName("user");
+                        j.IndexerProperty<string>("Follows")
+                            .HasColumnType("character varying")
+                            .HasColumnName("follows");
+                    });
 
-            entity.Property(e => e.Follows)
-                .HasColumnType("character varying")
-                .HasColumnName("follows");
-            entity.Property(e => e.User)
-                .HasColumnType("character varying")
-                .HasColumnName("user");
+            entity.HasMany(d => d.RecipesNavigation).WithMany(p => p.Users)
+                .UsingEntity<Dictionary<string, object>>(
+                    "RecipesLike",
+                    r => r.HasOne<Recipe>().WithMany()
+                        .HasForeignKey("Recipe")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("recipes_likes_recipe_fkey"),
+                    l => l.HasOne<User>().WithMany()
+                        .HasForeignKey("User")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("recipes_likes_user_fkey"),
+                    j =>
+                    {
+                        j.HasKey("User", "Recipe").HasName("recipes_likes_pkey");
+                        j.ToTable("recipes_likes");
+                        j.IndexerProperty<string>("User")
+                            .HasColumnType("character varying")
+                            .HasColumnName("user");
+                        j.IndexerProperty<int>("Recipe").HasColumnName("recipe");
+                    });
 
-            entity.HasOne(d => d.FollowsNavigation).WithMany()
-                .HasForeignKey(d => d.Follows)
-                .HasConstraintName("users_follows_follows_fkey");
-
-            entity.HasOne(d => d.UserNavigation).WithMany()
-                .HasForeignKey(d => d.User)
-                .HasConstraintName("users_follows_user_fkey");
+            entity.HasMany(d => d.Users).WithMany(p => p.Follows)
+                .UsingEntity<Dictionary<string, object>>(
+                    "UsersFollow",
+                    r => r.HasOne<User>().WithMany()
+                        .HasForeignKey("User")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("users_follows_user_fkey"),
+                    l => l.HasOne<User>().WithMany()
+                        .HasForeignKey("Follows")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("users_follows_follows_fkey"),
+                    j =>
+                    {
+                        j.HasKey("User", "Follows").HasName("users_follows_pkey");
+                        j.ToTable("users_follows");
+                        j.IndexerProperty<string>("User")
+                            .HasColumnType("character varying")
+                            .HasColumnName("user");
+                        j.IndexerProperty<string>("Follows")
+                            .HasColumnType("character varying")
+                            .HasColumnName("follows");
+                    });
         });
 
         OnModelCreatingPartial(modelBuilder);

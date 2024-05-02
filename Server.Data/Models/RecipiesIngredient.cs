@@ -9,7 +9,7 @@ public partial class RecipiesIngredient
 
     public double? Quantity { get; set; }
 
-    public int? Category { get; set; }
+    public int Category { get; set; }
 
     public virtual Category CategoryNavigation { get; set; }
 

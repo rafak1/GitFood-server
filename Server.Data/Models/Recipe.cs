@@ -20,4 +20,10 @@ public partial class Recipe
     public virtual ICollection<RecipesComment> RecipesComments { get; set; } = new List<RecipesComment>();
 
     public virtual ICollection<RecipiesImage> RecipiesImages { get; set; } = new List<RecipiesImage>();
+
+    public virtual ICollection<RecipiesIngredient> RecipiesIngredients { get; set; } = new List<RecipiesIngredient>();
+
+    public virtual ICollection<FoodCategory> Categories { get; set; } = new List<FoodCategory>();
+
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

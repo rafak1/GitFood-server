@@ -14,15 +14,15 @@ namespace Server.Logic.Managers;
 internal class ProductManager : IProductManager
 {
     private readonly GitfoodContext _dbInfo;
-    private const string ControllerPart = "products";
 
     public ProductManager(GitfoodContext database)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
     }
 
-    public async Task<IManagerActionResult> AddProductAsync(ProductViewModel product, string user) 
+    public async Task<IManagerActionResult<int>> AddProductAsync(ProductViewModel product, string user) 
     {
+        var transaction = await _dbInfo.Database.BeginTransactionAsync();
         await _dbInfo.Products.AddAsync(new Product{
             Name = product.Name,
             Description = product.Description,
@@ -32,7 +32,9 @@ internal class ProductManager : IProductManager
             Category = product.CategoryId
         });
         await _dbInfo.SaveChangesAsync();
-        return new ManagerActionResult(ResultEnum.OK);
+        var id = await _dbInfo.Products.Where(x => x.Barcode == product.Barcode && x.User == user).Select(x => x.Id).FirstOrDefaultAsync();
+        await transaction.CommitAsync();
+        return new ManagerActionResult<int>(id, ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult<ProductWithCategoryViewModel>> GetProductByIdAsync(int id) 
@@ -49,10 +51,10 @@ internal class ProductManager : IProductManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<ProductWithCategoryViewModel[]>> GetProductByBarcodeAsync(string barcode, string user)
+    public async Task<IManagerActionResult<ProductWithCategoryViewModel>> GetProductByBarcodeAsync(string barcode, string user)
     {
         var result = await _dbInfo.Products.Where(x => x.Barcode == barcode && x.User == user).ToArrayAsync();
-        return new ManagerActionResult<ProductWithCategoryViewModel[]>(result.Select(GetProductAllInfo).ToArray(), ResultEnum.OK);
+        return new ManagerActionResult<ProductWithCategoryViewModel>(GetProductAllInfo(result.FirstOrDefault()), ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult> UpdateProductAsync(ProductViewModel product, string user, int id)
@@ -99,7 +101,12 @@ internal class ProductManager : IProductManager
             },
             Category = new IdExtendedViewModel<CategoryViewModel>()
             {
-                //TODO
+                Id = product.CategoryNavigation.Id,
+                InnerInformation = new CategoryViewModel()
+                {
+                    Name = product.CategoryNavigation.Name,
+                    Unit = product.CategoryNavigation.Unit
+                }
             }
         };
     }

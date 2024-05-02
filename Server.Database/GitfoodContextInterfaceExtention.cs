@@ -1,7 +1,6 @@
 using Server.Database.Abstract;
 using Microsoft.EntityFrameworkCore;
 using Server.Data.Models;
-using Server.DataModel;
 
 namespace Server.Database;
 
@@ -46,9 +45,6 @@ public partial class GitfoodContext : DbContext, IDbInfo
     public IDbSet<Product> GetProductsTable()
         => new InternalDbSet<Product>(Products);
 
-    public IDbSet<ReciepesCategory> GetReciepesCategoriesTable()
-        => new InternalDbSet<ReciepesCategory>(ReciepesCategories);
-
     public IDbSet<Recipe> GetRecipesTable()
         => new InternalDbSet<Recipe>(Recipes);
 
@@ -57,9 +53,6 @@ public partial class GitfoodContext : DbContext, IDbInfo
 
     public IDbSet<RecipesComment> GetRecipesCommentsTable()
         => new InternalDbSet<RecipesComment>(RecipesComments);
-
-    public IDbSet<RecipesLike> GetRecipesLikesTable()
-        => new InternalDbSet<RecipesLike>(RecipesLikes);
 
     public IDbSet<RecipiesImage> GetRecipesImagesTable()
         => new InternalDbSet<RecipiesImage>(RecipiesImages);
@@ -75,7 +68,4 @@ public partial class GitfoodContext : DbContext, IDbInfo
 
     public IDbSet<User> GetUsersTable() 
         => new InternalDbSet<User>(Users);
-
-    public IDbSet<UsersFollow> GetUsersFollowTable()    
-        => new InternalDbSet<UsersFollow>(UsersFollows);
 }

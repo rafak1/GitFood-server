@@ -1,4 +1,6 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+
 namespace Server.Data.Models;
 
 public partial class User
@@ -14,4 +16,10 @@ public partial class User
     public virtual ICollection<RecipesComment> RecipesComments { get; set; } = new List<RecipesComment>();
 
     public virtual ICollection<ShoppingList> ShoppingLists { get; set; } = new List<ShoppingList>();
+
+    public virtual ICollection<User> Follows { get; set; } = new List<User>();
+
+    public virtual ICollection<Recipe> RecipesNavigation { get; set; } = new List<Recipe>();
+
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

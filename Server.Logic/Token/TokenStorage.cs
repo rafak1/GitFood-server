@@ -40,4 +40,12 @@ internal class TokenStorage : ITokenStorage
             .ToList()
             .ForEach(t => _tokens.Remove(t.Key));
     }
+
+    public void RemoveUser(string user)
+    {
+        PurgeIfTime(_dateTimeProvider.GetCurrentMiliseconds());
+        _tokens.Where(t => t.Value.User == user)
+            .ToList()
+            .ForEach(t => _tokens.Remove(t.Key));
+    }
 }

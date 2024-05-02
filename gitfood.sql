@@ -61,13 +61,15 @@ CREATE TABLE IF NOT EXISTS public.recipies_ingredients
 (
     reciepie integer NOT NULL,
     quantity double precision,
-    category integer
+    category integer,
+    PRIMARY KEY (reciepie, category)
 );
 
 CREATE TABLE IF NOT EXISTS public.reciepes_categories
 (
     reciepe integer,
-    category integer
+    category integer,
+    PRIMARY KEY (reciepe, category)
 );
 
 CREATE TABLE IF NOT EXISTS public.food_categories
@@ -82,6 +84,7 @@ CREATE TABLE IF NOT EXISTS public.shopping_list
 (
     id serial,
     "user" character varying,
+    name character varying,
     PRIMARY KEY (id)
 );
 
@@ -89,7 +92,8 @@ CREATE TABLE IF NOT EXISTS public.shopping_list_products
 (
     shopping_list_id integer,
     category integer,
-    quantity double precision
+    quantity double precision,
+    PRIMARY KEY (shopping_list_id, category)
 );
 
 CREATE TABLE IF NOT EXISTS public.add_categories_request
@@ -119,7 +123,8 @@ CREATE TABLE IF NOT EXISTS public.recipe_children
 CREATE TABLE IF NOT EXISTS public.recipes_likes
 (
     "user" character varying,
-    recipe integer
+    recipe integer,
+    PRIMARY KEY ("user", recipe)
 );
 
 CREATE TABLE IF NOT EXISTS public.recipes_comments
@@ -135,7 +140,8 @@ CREATE TABLE IF NOT EXISTS public.recipes_comments
 CREATE TABLE IF NOT EXISTS public.users_follows
 (
     "user" character varying,
-    follows character varying
+    follows character varying,
+    PRIMARY KEY ("user", follows)
 );
 
 ALTER TABLE IF EXISTS public.fridge
@@ -219,16 +225,16 @@ ALTER TABLE IF EXISTS public.shopping_list
 
 
 ALTER TABLE IF EXISTS public.shopping_list_products
-    ADD FOREIGN KEY (shopping_list_id)
-    REFERENCES public.shopping_list (id) MATCH SIMPLE
+    ADD FOREIGN KEY (category)
+    REFERENCES public.categories (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
 
 
 ALTER TABLE IF EXISTS public.shopping_list_products
-    ADD FOREIGN KEY (category)
-    REFERENCES public.categories (id) MATCH SIMPLE
+    ADD FOREIGN KEY (shopping_list_id)
+    REFERENCES public.shopping_list (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;

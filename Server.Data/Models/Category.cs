@@ -16,4 +16,8 @@ public partial class Category
     public virtual ICollection<AddCategoriesRequest> AddCategoriesRequests { get; set; } = new List<AddCategoriesRequest>();
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+
+    public virtual ICollection<RecipiesIngredient> RecipiesIngredients { get; set; } = new List<RecipiesIngredient>();
+
+    public virtual ICollection<ShoppingListProduct> ShoppingListProducts { get; set; } = new List<ShoppingListProduct>();
 }
