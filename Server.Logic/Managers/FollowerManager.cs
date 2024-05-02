@@ -27,6 +27,7 @@ public class FollowerManager : IFollowerManager
         }
 
         user2.Follows.Add(user1);
+        await _dbInfo.SaveChangesAsync();
 
         return new ManagerActionResult(ResultEnum.OK);
     }
@@ -56,7 +57,7 @@ public class FollowerManager : IFollowerManager
         }
 
         user2.Follows.Remove(user1);
-
+        await _dbInfo.SaveChangesAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
 }
