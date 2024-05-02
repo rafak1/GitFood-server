@@ -14,6 +14,12 @@ internal class RecipeManager : IRecipeManager
 {
     private readonly GitfoodContext _dbInfo;
 
+    private static readonly string _recipeNotFound = "Recipe not found";
+
+    private static readonly string _categoryNotFound = "Category not found";
+
+    private static readonly string _commentNotFound = "Comment not found";
+
     public RecipeManager(GitfoodContext database)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
@@ -23,13 +29,13 @@ internal class RecipeManager : IRecipeManager
     {
         var transaction = await _dbInfo.Database.BeginTransactionAsync();
 
-        var newRecipe =(new Recipe
+        var newRecipe =new Recipe
         {
             Name = recipe.Name,
             Description = recipe.Description,
             Author = user,
             MarkdownPath = ""
-        });
+        };
 
         await _dbInfo.Recipes.AddAsync(newRecipe);
         await _dbInfo.SaveChangesAsync();
@@ -52,7 +58,7 @@ internal class RecipeManager : IRecipeManager
                 if (categoryEntity == null)
                 {
                     await transaction.RollbackAsync();
-                    return new ManagerActionResult<int>(-1, ResultEnum.BadRequest, "Category not found");
+                    return new ManagerActionResult<int>(-1, ResultEnum.BadRequest, _categoryNotFound);
                 }
 
                 newRecipe.Categories.Add(categoryEntity);
@@ -84,7 +90,7 @@ internal class RecipeManager : IRecipeManager
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == id && x.Author == user);
         if (recipe == null)
         {
-            return new ManagerActionResult(ResultEnum.BadRequest, "Recipe not found");
+            return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
         }
 
         _dbInfo.Recipes.Remove(recipe);
@@ -103,7 +109,7 @@ internal class RecipeManager : IRecipeManager
 
         if (recipe == null)
         {
-            return new ManagerActionResult<Recipe>(null, ResultEnum.BadRequest, "Recipe not found");
+            return new ManagerActionResult<Recipe>(null, ResultEnum.BadRequest, _recipeNotFound);
         }
 
         return new ManagerActionResult<Recipe>(recipe, ResultEnum.OK);
@@ -128,7 +134,7 @@ internal class RecipeManager : IRecipeManager
         var comment = await _dbInfo.RecipesComments.FirstOrDefaultAsync(x => x.Id == commentId && x.User == user);
         if (comment == null)
         {
-            return new ManagerActionResult(ResultEnum.BadRequest, "Comment not found");
+            return new ManagerActionResult(ResultEnum.BadRequest, _commentNotFound);
         }
 
         _dbInfo.RecipesComments.Remove(comment);
@@ -142,7 +148,7 @@ internal class RecipeManager : IRecipeManager
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
         if (recipe == null)
         {
-            return new ManagerActionResult(ResultEnum.BadRequest, "Recipe not found");
+            return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
         }
         recipe.Users.Add(await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == user));
         await _dbInfo.SaveChangesAsync();
@@ -155,7 +161,7 @@ internal class RecipeManager : IRecipeManager
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
         if (recipe == null)
         {
-            return new ManagerActionResult(ResultEnum.BadRequest, "Recipe not found");
+            return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
         }
 
         recipe.Users.Remove(await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == user));

@@ -24,7 +24,7 @@ public class FollowerController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _followerManager.AddFollowerAsync(userToFollow, user)).MapToActionResult();
     }
@@ -35,7 +35,7 @@ public class FollowerController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _followerManager.RemoveFollowerAsync(userToUnfollow, user)).MapToActionResult();
     }
@@ -46,7 +46,7 @@ public class FollowerController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _followerManager.GetFollowersAsync(user)).MapToActionResult();
     }
@@ -57,7 +57,7 @@ public class FollowerController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _followerManager.GetFollowingAsync(user)).MapToActionResult();
     }

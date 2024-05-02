@@ -25,7 +25,7 @@ public class CategoryController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _categoryManager.AddNewCategoryRequestAsync(category, user)).MapToActionResult();
     }
@@ -46,7 +46,7 @@ public class CategoryController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user != "0")
-            return BadRequest("No authorization to delete categories");
+            return BadRequest(_userNotFound);
         return (await _categoryManager.DeleteCategoryAsync(id)).MapToActionResult();
     }
 }

@@ -11,6 +11,8 @@ public class FollowerManager : IFollowerManager
 {
     private readonly GitfoodContext _dbInfo;
 
+    private static readonly string _userNotFound = "User not found";
+
     public FollowerManager(GitfoodContext dbInfo) 
     {
         _dbInfo = dbInfo ?? throw new ArgumentNullException(nameof(dbInfo));
@@ -23,7 +25,7 @@ public class FollowerManager : IFollowerManager
 
         if(user1 == null || user2 == null)
         {
-            return new ManagerActionResult(ResultEnum.BadRequest, "User not found");
+            return new ManagerActionResult(ResultEnum.BadRequest, _userNotFound);
         }
 
         user2.Follows.Add(user1);
@@ -53,7 +55,7 @@ public class FollowerManager : IFollowerManager
 
         if(user1 == null || user2 == null)
         {
-            return new ManagerActionResult(ResultEnum.BadRequest, "User not found");
+            return new ManagerActionResult(ResultEnum.BadRequest, _userNotFound);
         }
 
         user2.Follows.Remove(user1);

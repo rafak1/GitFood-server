@@ -7,6 +7,8 @@ public class BaseController : Controller
 
     private readonly ITokenStorage _tokenStorage;
 
+    protected static readonly string _userNotFound = "No user found assigned to this token";
+
     public BaseController(ITokenStorage tokenStorage)
     {
         _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));

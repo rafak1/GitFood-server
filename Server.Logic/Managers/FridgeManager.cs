@@ -50,7 +50,7 @@ internal class FridgeManager : IFridgeManager
             });
         }
         await _dbInfo.SaveChangesAsync();
-        transaction.Commit();
+        await transaction.CommitAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
 

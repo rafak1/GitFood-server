@@ -24,7 +24,7 @@ public class FridgeController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _fridgeManager.CreateFridgeAsync(name, user)).MapToActionResult();
     }
@@ -35,7 +35,7 @@ public class FridgeController : BaseController
     public async Task<IActionResult> UpdateProductInFridge(int fridgeId, int productId, int quantity){
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _fridgeManager.UpdateProductInFridgeAsync(fridgeId, productId, quantity, user)).MapToActionResult();
     }
@@ -56,7 +56,7 @@ public class FridgeController : BaseController
     public async Task<IActionResult> GetAllFridges(){
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _fridgeManager.GetAllFridgesAsync(user)).MapToActionResult();
     }

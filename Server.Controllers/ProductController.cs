@@ -25,7 +25,7 @@ public class ProductController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _productManager.AddProductAsync(product, user)).MapToActionResult();
     }
@@ -36,7 +36,7 @@ public class ProductController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _productManager.UpdateProductAsync(product, user, id)).MapToActionResult();
     }
@@ -57,7 +57,7 @@ public class ProductController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
         return (await _productManager.GetProductByBarcodeAsync(barcode, user)).MapToActionResult();
     }
 

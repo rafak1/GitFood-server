@@ -7,5 +7,4 @@ public class ProductViewModel
     public required string Barcode { get; set; }
     public int CategoryId { get; set; }
     public double Quantity { get; set; }
-    public string? User { get; set; }
 }

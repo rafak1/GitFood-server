@@ -96,7 +96,6 @@ internal class ProductManager : IProductManager
                     Barcode = product.Barcode,
                     Quantity = (double)product.Quantity,
                     CategoryId = product.Category.Value,
-                    User = product.User
                 }
             },
             Category = new IdExtendedViewModel<CategoryViewModel>()

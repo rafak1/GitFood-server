@@ -25,7 +25,7 @@ public class RecipeController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _recipeManager.CreateRecipeAsync(recipe, user)).MapToActionResult();
     }
@@ -36,7 +36,7 @@ public class RecipeController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _recipeManager.DeleteRecipeAsync(id, user)).MapToActionResult();
     }
@@ -47,7 +47,7 @@ public class RecipeController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _recipeManager.GetRecipeByIdAsync(id, user)).MapToActionResult();
     }
@@ -58,7 +58,7 @@ public class RecipeController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _recipeManager.AddCommentAsync(recipeId, comment, user)).MapToActionResult();
     }
@@ -69,7 +69,7 @@ public class RecipeController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _recipeManager.RemoveCommentAsync(commentId, user)).MapToActionResult();
     }
@@ -80,7 +80,7 @@ public class RecipeController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _recipeManager.LikeRecipeAsync(recipeId, user)).MapToActionResult();
     }

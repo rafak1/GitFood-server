@@ -37,7 +37,7 @@ public class LoginController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
         RemoveUser(Request.Headers.Authorization);
         return Ok();
     }

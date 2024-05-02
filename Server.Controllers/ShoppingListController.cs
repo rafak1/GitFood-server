@@ -24,7 +24,7 @@ public class ShoppingListController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _shoppingListManager.CreateShoppingListAsync(name, user)).MapToActionResult();
     }
@@ -40,7 +40,7 @@ public class ShoppingListController : BaseController
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
-            return BadRequest("No user found assigned to this token");
+            return BadRequest(_userNotFound);
 
         return (await _shoppingListManager.GetAllShoppingListsAsync(user)).MapToActionResult();
     }
