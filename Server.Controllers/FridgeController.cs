@@ -43,17 +43,30 @@ public class FridgeController : BaseController
     [HttpDelete]
     [Route($"{_controllerRoute}/remove")]
     public async Task<IActionResult> RemoveFridge(int fridgeId) 
-        => (await _fridgeManager.DeleteFridgeAsync(fridgeId)).MapToActionResult();
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _fridgeManager.DeleteFridgeAsync(fridgeId, user)).MapToActionResult();
+    }
 
 
     [HttpGet]
     [Route($"{_controllerRoute}/get")]
-    public async Task<IActionResult> GetFridge(int fridgeId) 
-        => (await _fridgeManager.GetFridgeAsync(fridgeId)).MapToActionResult();
+    public async Task<IActionResult> GetFridge(int fridgeId)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+        
+        return (await _fridgeManager.GetFridgeAsync(fridgeId, user)).MapToActionResult();
+    }
 
     [HttpGet]
     [Route($"{_controllerRoute}/getAll")]
-    public async Task<IActionResult> GetAllFridges(){
+    public async Task<IActionResult> GetAllFridges()
+    {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
@@ -61,4 +74,14 @@ public class FridgeController : BaseController
         return (await _fridgeManager.GetAllFridgesAsync(user)).MapToActionResult();
     }
 
+    [HttpGet]
+    [Route($"{_controllerRoute}/getMap")]
+    public async Task<IActionResult> GetFridgeMap()
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _fridgeManager.GetMapForUserAsync(user)).MapToActionResult();
+    }
 }

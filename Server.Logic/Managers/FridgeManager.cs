@@ -54,9 +54,11 @@ internal class FridgeManager : IFridgeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<Fridge>> GetFridgeAsync(int fridgeId)
+    public async Task<IManagerActionResult<Fridge>> GetFridgeAsync(int fridgeId, string user)
     {
-        var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.Id == fridgeId);
+        var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.Id == fridgeId && x.UserLogin == user);
+        if (fridge is null)
+            return new ManagerActionResult<Fridge>(null, ResultEnum.NotFound);
         return new ManagerActionResult<Fridge>(fridge, ResultEnum.OK);
     }
 
@@ -76,9 +78,9 @@ internal class FridgeManager : IFridgeManager
         return new ManagerActionResult<int>(id, ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> DeleteFridgeAsync(int fridgeId)
+    public async Task<IManagerActionResult> DeleteFridgeAsync(int fridgeId, string user)
     {
-        await _dbInfo.Fridges.Where(x => x.Id == fridgeId).ExecuteDeleteAsync();
+        await _dbInfo.Fridges.Where(x => x.Id == fridgeId && x.UserLogin == user).ExecuteDeleteAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
 
@@ -86,5 +88,15 @@ internal class FridgeManager : IFridgeManager
     {
         var fridges = await _dbInfo.Fridges.Where(x => x.UserLogin == login).ToArrayAsync();
         return new ManagerActionResult<Fridge[]>(fridges, ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult<Dictionary<string, int>>> GetMapForUserAsync(string login)
+    {
+        var fridges = await _dbInfo.Fridges.Where(x => x.UserLogin == login).ToArrayAsync();
+        var result = new Dictionary<string, int>();
+        
+        fridges.ToList().ForEach(x=> result.Add(x.Name, x.Id));
+
+        return new ManagerActionResult<Dictionary<string, int>>(result, ResultEnum.OK);
     }
 }
