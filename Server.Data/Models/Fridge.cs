@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 
 namespace Server.Data.Models;
 
@@ -13,5 +12,6 @@ public partial class Fridge
 
     public virtual ICollection<FridgeProduct> FridgeProducts { get; set; } = new List<FridgeProduct>();
 
+    [JsonIgnore]
     public virtual User UserLoginNavigation { get; set; }
 }

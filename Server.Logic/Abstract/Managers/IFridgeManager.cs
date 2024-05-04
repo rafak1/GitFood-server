@@ -10,5 +10,5 @@ public interface IFridgeManager
     public Task<IManagerActionResult> DeleteFridgeAsync(int fridgeId, string user);
     public Task<IManagerActionResult<Fridge>> GetFridgeAsync(int fridgeId, string user);
     public Task<IManagerActionResult<Fridge[]>> GetAllFridgesAsync(string login);
-    public Task<IManagerActionResult<Dictionary<int, string>>> GetMapForUserAsync(string login);
+    public Task<IManagerActionResult<(int Id, string Name)[]>> GetMapForUserAsync(string login);
 }

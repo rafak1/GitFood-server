@@ -90,13 +90,12 @@ internal class FridgeManager : IFridgeManager
         return new ManagerActionResult<Fridge[]>(fridges, ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<Dictionary<int, string>>> GetMapForUserAsync(string login)
+    public async Task<IManagerActionResult<(int Id, string Name)[]>> GetMapForUserAsync(string login)
     {
         var fridges = await _dbInfo.Fridges.Where(x => x.UserLogin == login).ToArrayAsync();
-        var result = new Dictionary<int, string>();
         
-        fridges.ToList().ForEach(x=> result.Add(x.Id, x.Name));
+        (int Id, string Name)[] result = fridges.Select(x => (x.Id, x.Name)).ToArray();
 
-        return new ManagerActionResult<Dictionary<int, string>>(result, ResultEnum.OK);
+        return new ManagerActionResult<(int Id, string Name)[]>(result, ResultEnum.OK);
     }
 }

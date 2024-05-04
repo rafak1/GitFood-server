@@ -1,28 +1,28 @@
 using Server.Logic.Abstract.Managers;
-using Server.ViewModels.Products;
-using Server.ViewModels;
+using Server.ViewModels.Recipes;
 using Server.Database;
 using Server.Logic.Abstract;
 using System.Text;
 using Server.Data.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Server.Logic.Managers;
 
 internal class RecipeManager : IRecipeManager
 {
     private readonly GitfoodContext _dbInfo;
-
+    private readonly IPageingManager _pageingManager;
     private static readonly string _recipeNotFound = "Recipe not found";
 
     private static readonly string _categoryNotFound = "Category not found";
 
     private static readonly string _commentNotFound = "Comment not found";
 
-    public RecipeManager(GitfoodContext database)
+    public RecipeManager(GitfoodContext database, IPageingManager pageingManager)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
+        _pageingManager = pageingManager ?? throw new ArgumentNullException(nameof(pageingManager));
     }
 
     public async Task<IManagerActionResult<int>> CreateRecipeAsync(RecipeViewModel recipe, string user)
@@ -208,5 +208,18 @@ internal class RecipeManager : IRecipeManager
             await _dbInfo.RecipiesIngredients.AddAsync(newIngredient);
             recipe.RecipiesIngredients.Add(newIngredient);
         }
+    }
+
+    public async Task<IManagerActionResult<Recipe[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] categoryIds)
+    {
+        IQueryable<Recipe> data = _dbInfo.Recipes;
+        if(!searchName.IsNullOrEmpty())
+            data = data.Where(x => x.Name.Contains(searchName));
+        if(categoryIds is not null && categoryIds.Length > 0) 
+        {
+            var categoryIdsContainer = categoryIds.ToHashSet();
+            data = data.Where(x => x.Categories.Any(y => categoryIdsContainer.Contains(y.Id)));
+        }
+        return new ManagerActionResult<Recipe[]>(await _pageingManager.GetPagedInfo(data, page, pageSize).ToArrayAsync(),ResultEnum.OK);
     }
 }

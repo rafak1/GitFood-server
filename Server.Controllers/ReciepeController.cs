@@ -3,7 +3,7 @@ using Server.ViewModels.Categories;
 using Microsoft.AspNetCore.Authorization;
 using Server.Logic.Abstract.Managers;
 using Server.Logic.Abstract.Token;
-using Server.ViewModels.Products;
+using Server.ViewModels.Recipes;
 
 namespace Server.Controllers;
 
@@ -85,4 +85,13 @@ public class RecipeController : BaseController
         return (await _recipeManager.LikeRecipeAsync(recipeId, user)).MapToActionResult();
     }
 
+    [HttpPost]
+    [Route($"{_controllerRoute}/getPaged")]
+    public async Task<IActionResult> GetRecepiesPaged(int page, int pageSize, [FromBody]RecipeSearchViewModel searchParams)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+        return (await _recipeManager.GetRecipesPagedAsync(page, pageSize, searchParams.SearchName, searchParams.CategoryIds)).MapToActionResult();
+    }
 }
