@@ -1,4 +1,4 @@
-namespace Server.ViewModels.Products;
+namespace Server.ViewModels.Recipes;
 
 public class RecipeImageViewModel
 {

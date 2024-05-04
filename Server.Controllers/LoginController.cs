@@ -33,7 +33,7 @@ public class LoginController : BaseController
 
     [HttpDelete]
     [Route($"{_controllerRoute}/signOut")]
-    public async Task<IActionResult> signOut()
+    public IActionResult SignOutCall()
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
