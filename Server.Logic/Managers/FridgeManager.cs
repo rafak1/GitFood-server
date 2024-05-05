@@ -30,18 +30,17 @@ internal class FridgeManager : IFridgeManager
 
         if(fridge.FridgeProducts.Any(x => x.ProductId == productId))
         {
-            var currentAmmount = fridge.FridgeProducts.First(x => x.ProductId == productId).Ammount;
-            if(currentAmmount + quantity < 0)
+            if(quantity < 0)
             {
                 return new ManagerActionResult(ResultEnum.BadRequest);
             }
-            else if(currentAmmount + quantity == 0)
+            else if(quantity == 0)
             {
                 fridge.FridgeProducts.Remove(fridge.FridgeProducts.First(x => x.ProductId == productId));
             }
             else
             {
-                fridge.FridgeProducts.First(x => x.ProductId == productId).Ammount += quantity;
+                fridge.FridgeProducts.First(x => x.ProductId == productId).Ammount = quantity;
             }
         }
         else

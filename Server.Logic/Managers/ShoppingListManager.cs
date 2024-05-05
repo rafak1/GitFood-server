@@ -58,7 +58,9 @@ public class ShoppingListManager : IShoppingListManager
         if (shoppingList.ShoppingListProducts.Any(x => x.Category == categoryId))
         {
             var shoppingListProduct = shoppingList.ShoppingListProducts.First(x => x.Category == categoryId);
-            shoppingListProduct.Quantity += quantity;
+            shoppingListProduct.Quantity = quantity;
+            if(quantity == 0)
+                shoppingList.ShoppingListProducts.Remove(shoppingListProduct);
         }
         else
         {
