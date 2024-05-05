@@ -20,7 +20,11 @@ internal class FridgeManager : IFridgeManager
     {
         var transaction = await _dbInfo.Database.BeginTransactionAsync();
 
-        var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.Id == fridgeId);
+        var fridge = await _dbInfo.Fridges
+            .Include(x => x.FridgeProducts)
+            .ThenInclude(x => x.Product)
+            .ThenInclude(x => x.CategoryNavigation)
+            .FirstOrDefaultAsync(x => x.Id == fridgeId);
         if (fridge is null)
             return new ManagerActionResult(ResultEnum.NotFound);
 
@@ -56,7 +60,11 @@ internal class FridgeManager : IFridgeManager
 
     public async Task<IManagerActionResult<Fridge>> GetFridgeAsync(int fridgeId, string user)
     {
-        var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.Id == fridgeId && x.UserLogin == user);
+        var fridge = await _dbInfo.Fridges
+            .Include(x => x.FridgeProducts)
+            .ThenInclude(x => x.Product)
+            .ThenInclude(x => x.CategoryNavigation)
+            .FirstOrDefaultAsync(x => x.Id == fridgeId && x.UserLogin == user);
         if (fridge is null)
             return new ManagerActionResult<Fridge>(null, ResultEnum.NotFound);
         return new ManagerActionResult<Fridge>(fridge, ResultEnum.OK);
@@ -86,7 +94,11 @@ internal class FridgeManager : IFridgeManager
 
     public async Task<IManagerActionResult<Fridge[]>> GetAllFridgesAsync(string login)
     {
-        var fridges = await _dbInfo.Fridges.Where(x => x.UserLogin == login).ToArrayAsync();
+        var fridges = await _dbInfo.Fridges
+            .Include(x => x.FridgeProducts)
+            .ThenInclude(x => x.Product)
+            .ThenInclude(x => x.CategoryNavigation)
+            .Where(x => x.UserLogin == login).ToArrayAsync();
         return new ManagerActionResult<Fridge[]>(fridges, ResultEnum.OK);
     }
 
