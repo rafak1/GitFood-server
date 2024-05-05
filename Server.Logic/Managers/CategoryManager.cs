@@ -61,4 +61,10 @@ internal class CategoryManager : ICategoryManager
         await _dbInfo.Categories.Where(x => x.Id == id).ExecuteDeleteAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
+
+    public async Task<IManagerActionResult<string[]>> GetUnitsAsync() 
+    {
+        var units = Enum.GetNames(typeof(Units));
+        return new ManagerActionResult<string[]>(units, ResultEnum.OK);
+    }
 }

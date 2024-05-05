@@ -49,4 +49,9 @@ public class CategoryController : BaseController
             return BadRequest(_userNotFound);
         return (await _categoryManager.DeleteCategoryAsync(id)).MapToActionResult();
     }
+
+    [HttpGet]
+    [Route($"{_controllerRoute}/getUnits")]
+    public async Task<IActionResult> GetUnitsAsync() 
+        => (await _categoryManager.GetUnitsAsync()).MapToActionResult();
 }
