@@ -39,7 +39,7 @@ internal class ProductManager : IProductManager
 
     public async Task<IManagerActionResult<ProductWithCategoryViewModel>> GetProductByIdAsync(int id) 
     {
-        var result = await _dbInfo.Products.FirstOrDefaultAsync(x => x.Id == id);
+        var result = await _dbInfo.Products.Include(x => x.CategoryNavigation).FirstOrDefaultAsync(x => x.Id == id);
         if(result is null)
             return new ManagerActionResult<ProductWithCategoryViewModel>(null, ResultEnum.NotFound);
         return new ManagerActionResult<ProductWithCategoryViewModel>(GetProductAllInfo(result), ResultEnum.OK);
@@ -53,7 +53,9 @@ internal class ProductManager : IProductManager
 
     public async Task<IManagerActionResult<ProductWithCategoryViewModel>> GetProductByBarcodeAsync(string barcode, string user)
     {
-        var result = await _dbInfo.Products.Where(x => x.Barcode == barcode && x.User == user).ToArrayAsync();
+        var result = await _dbInfo.Products.Where(x => x.Barcode == barcode && x.User == user).Include(x => x.CategoryNavigation).ToArrayAsync();
+        if (result.Length == 0)
+            return new ManagerActionResult<ProductWithCategoryViewModel>(null, ResultEnum.NotFound);
         return new ManagerActionResult<ProductWithCategoryViewModel>(GetProductAllInfo(result.FirstOrDefault()), ResultEnum.OK);
     }
 
@@ -74,11 +76,15 @@ internal class ProductManager : IProductManager
 
     public async Task<IManagerActionResult<ProductWithCategoryViewModel>> SuggestProductAsync(string barcode)
     {
-        var product = await _dbInfo.Products
+        var result = await _dbInfo.Products
             .Where(x => x.Barcode == barcode)
-            .GroupBy(x => x.Barcode)
+            .Include(x => x.CategoryNavigation)
+            .ToListAsync();
+
+        var product = result
+            .GroupBy(x => x.Category)
             .OrderByDescending(x => x.Count())
-            .FirstOrDefaultAsync();
+            .FirstOrDefault();
         return new ManagerActionResult<ProductWithCategoryViewModel>(GetProductAllInfo(product.FirstOrDefault()), ResultEnum.OK);
     }
 
