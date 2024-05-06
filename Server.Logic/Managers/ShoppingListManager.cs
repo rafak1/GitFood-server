@@ -49,6 +49,15 @@ public class ShoppingListManager : IShoppingListManager
         return new ManagerActionResult<ShoppingList>(shoppingList, ResultEnum.OK);
     }
 
+    public async Task<IManagerActionResult<(int Id, string Name)[]>> GetShoppingListMapAsync(string user)
+    {
+        var shoppingLists = await _dbInfo.ShoppingLists.Where(x => x.User == user).ToArrayAsync();
+
+        (int Id, string Name)[] shoppingListMap = shoppingLists.Select(x => (x.Id, x.Name)).ToArray();
+
+        return new ManagerActionResult<(int Id, string Name)[]>(shoppingListMap, ResultEnum.OK);
+    }
+
     public async Task<IManagerActionResult> UpdateShoppingListAsync(int shoppingListId, int categoryId, int quantity)
     {
         var transaction = _dbInfo.Database.BeginTransaction();
