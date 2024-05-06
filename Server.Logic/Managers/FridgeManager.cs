@@ -87,7 +87,10 @@ internal class FridgeManager : IFridgeManager
 
     public async Task<IManagerActionResult> DeleteFridgeAsync(int fridgeId, string user)
     {
-        await _dbInfo.Fridges.Where(x => x.Id == fridgeId && x.UserLogin == user).ExecuteDeleteAsync();
+        var fridge = await _dbInfo.Fridges
+            .Include(x => x.FridgeProducts)
+            .FirstOrDefaultAsync(x => x.Id == fridgeId && x.UserLogin == user);
+            
         return new ManagerActionResult(ResultEnum.OK);
     }
 

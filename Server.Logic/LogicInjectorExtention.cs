@@ -33,7 +33,8 @@ public static class LogicInjectorExtention
             .AddScoped<IRecipeManager, RecipeManager>()
             .AddScoped<IFollowerManager, FollowerManager>()
             .AddScoped<IFoodCategoryManager, FoodCategoryManager>()
-            .AddScoped<IPageingManager, PageingManager>();
+            .AddScoped<IPageingManager, PageingManager>()
+            .AddScoped<IShoppingListManager, ShoppingListManager>();
 
     }
 
