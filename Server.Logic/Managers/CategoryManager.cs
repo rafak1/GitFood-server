@@ -41,7 +41,7 @@ internal class CategoryManager : ICategoryManager
 
         await transaction.CommitAsync();
 
-        return new ManagerActionResult<int>(id ,ResultEnum.OK);
+        return new ManagerActionResult<int>(id, ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult<Category[]>> GetCategoriesAsync() 
