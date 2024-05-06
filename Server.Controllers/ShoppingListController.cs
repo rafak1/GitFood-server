@@ -53,7 +53,7 @@ public class ShoppingListController : BaseController
     [HttpPatch]
     [Route($"{_controllerRoute}/update")]
     public async Task<IActionResult> UpdateShoppingList(int shoppingListId, int categoryId, int quantity) 
-        => (await _shoppingListManager.UpdateShoppingListAsync(shoppingListId, categoryId, quantity)).MapToActionResult();\\
+        => (await _shoppingListManager.UpdateShoppingListAsync(shoppingListId, categoryId, quantity)).MapToActionResult();
     
 
     [HttpGet]
@@ -65,6 +65,5 @@ public class ShoppingListController : BaseController
             return BadRequest(_userNotFound);
 
         return (await _shoppingListManager.GetShoppingListMapAsync(user)).MapToActionResult();
-
     }
 }
