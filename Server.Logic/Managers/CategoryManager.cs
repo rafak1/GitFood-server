@@ -16,7 +16,7 @@ internal class CategoryManager : ICategoryManager
         _dbInfo = dbInfo ?? throw new ArgumentNullException(nameof(dbInfo));
     }
 
-    public async Task<IManagerActionResult> AddNewCategoryRequestAsync(CategoryViewModel category, string user)
+    public async Task<IManagerActionResult<int>> AddNewCategoryRequestAsync(CategoryViewModel category, string user)
     {
         if (!Enum.IsDefined(typeof(Units), category.Unit))
             return new ManagerActionResult(ResultEnum.BadRequest);
