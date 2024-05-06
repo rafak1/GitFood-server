@@ -42,7 +42,7 @@ internal class RecipeManager : IRecipeManager
         var id = newRecipe.Id;
 
         var markdownPath = $"./recipes/{user}/{recipe.Name}_{id}.md";
-        File.WriteAllBytes(markdownPath, Encoding.UTF8.GetBytes(recipe.Markdown));
+        //TODO File.WriteAllBytes(markdownPath, Encoding.UTF8.GetBytes(recipe.Markdown));
 
         newRecipe.MarkdownPath = markdownPath;
 
@@ -175,7 +175,7 @@ internal class RecipeManager : IRecipeManager
         foreach (var image in recipeViewModel.Images)
         {
             var imagePath = $"./recipes/{recipe.Author}/{recipe.Name}_{recipe.Id}_{image.Name}.png";
-            File.WriteAllBytes(imagePath, image.Data);
+            //TODO File.WriteAllBytes(imagePath, image.Data);
 
             var newImage = new RecipiesImage
             {
