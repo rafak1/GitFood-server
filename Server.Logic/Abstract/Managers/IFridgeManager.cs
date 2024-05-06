@@ -11,4 +11,5 @@ public interface IFridgeManager
     public Task<IManagerActionResult<Fridge>> GetFridgeAsync(int fridgeId, string user);
     public Task<IManagerActionResult<Fridge[]>> GetAllFridgesAsync(string login);
     public Task<IManagerActionResult<(int Id, string Name)[]>> GetMapForUserAsync(string login);
+    public Task<IManagerActionResult> AddProductsToFridgeAsync((int productId, int quantity)[] products,int fridgeId, string user);
 }

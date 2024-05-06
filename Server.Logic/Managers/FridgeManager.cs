@@ -57,6 +57,54 @@ internal class FridgeManager : IFridgeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
+    public async Task<IManagerActionResult> AddProductsToFridgeAsync((int productId, int quantity)[] products,int fridgeId, string user)
+    {
+        var transaction = await _dbInfo.Database.BeginTransactionAsync();
+
+        var fridge = await _dbInfo.Fridges
+            .Include(x => x.FridgeProducts)
+            .ThenInclude(x => x.Product)
+            .ThenInclude(x => x.CategoryNavigation)
+            .FirstOrDefaultAsync(x => x.Id == fridgeId);
+        if (fridge is null)
+            return new ManagerActionResult(ResultEnum.NotFound);
+
+        if (fridge.UserId != user)
+            return new ManagerActionResult(ResultEnum.Forbidden);
+
+        foreach (var product in products)
+        {
+            if(fridge.FridgeProducts.Any(x => x.ProductId == product.productId))
+            {
+                int new_quantity = fridge.FridgeProducts.First(x => x.ProductId == product.productId).Ammount + product.quantity;
+                if(new_quantity < 0)
+                {
+                    return new ManagerActionResult(ResultEnum.BadRequest);
+                }
+                else if(new_quantity == 0)
+                {
+                    fridge.FridgeProducts.Remove(fridge.FridgeProducts.First(x => x.ProductId == product.productId));
+                }
+                else
+                {
+                    fridge.FridgeProducts.First(x => x.ProductId == product.productId).Ammount = new_quantity;
+                }
+            }
+            else
+            {
+                fridge.FridgeProducts.Add(new FridgeProduct
+                {
+                    ProductId = product.productId,
+                    Ammount = product.quantity,
+                    FridgeId = product.fridgeId
+                });
+            }
+        }
+        await _dbInfo.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
     public async Task<IManagerActionResult<Fridge>> GetFridgeAsync(int fridgeId, string user)
     {
         var fridge = await _dbInfo.Fridges

@@ -40,6 +40,16 @@ public class FridgeController : BaseController
         return (await _fridgeManager.UpdateProductInFridgeAsync(fridgeId, productId, quantity, user)).MapToActionResult();
     }
 
+    [HttpPatch]
+    [Route($"{_controllerRoute}/addProducts")]
+    public async Task<IActionResult> AddProductsToFridge((int productId, int quantity)[] products, int fridgeId){
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _fridgeManager.AddProductsToFridgeAsync(products,fridgeId,  user)).MapToActionResult();
+    }
+
     [HttpDelete]
     [Route($"{_controllerRoute}/remove")]
     public async Task<IActionResult> RemoveFridge(int fridgeId) 
