@@ -19,7 +19,7 @@ internal class CategoryManager : ICategoryManager
     public async Task<IManagerActionResult<int>> AddNewCategoryRequestAsync(CategoryViewModel category, string user)
     {
         if (!Enum.IsDefined(typeof(Units), category.Unit))
-            return new ManagerActionResult<int>(0, ResultEnum.InvalidUnit);
+            return new ManagerActionResult<int>(0, ResultEnum.BadRequest);
 
         var transaction = _dbInfo.Database.BeginTransaction();
 
