@@ -39,13 +39,19 @@ public class ShoppingListManager : IShoppingListManager
 
     public async Task<IManagerActionResult<ShoppingList[]>> GetAllShoppingListsAsync(string user)
     {
-        var shoppingLists = await _dbInfo.ShoppingLists.Where(x => x.User == user).ToArrayAsync();
+        var shoppingLists = await _dbInfo.ShoppingLists.Where(x => x.User == user)
+            .Include(x => x.ShoppingListProducts)
+            .ThenInclude(x => x.CategoryNavigation)
+            .ToArrayAsync();
         return new ManagerActionResult<ShoppingList[]>(shoppingLists, ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult<ShoppingList>> GetShoppingListAsync(int shoppingListId)
     {
-        var shoppingList = await _dbInfo.ShoppingLists.FirstOrDefaultAsync(x => x.Id == shoppingListId);
+        var shoppingList = await _dbInfo.ShoppingLists
+            .Include(x => x.ShoppingListProducts)
+            .ThenInclude(x => x.CategoryNavigation)
+            .FirstOrDefaultAsync(x => x.Id == shoppingListId);
         return new ManagerActionResult<ShoppingList>(shoppingList, ResultEnum.OK);
     }
 
@@ -61,7 +67,10 @@ public class ShoppingListManager : IShoppingListManager
     public async Task<IManagerActionResult> UpdateShoppingListAsync(int shoppingListId, int categoryId, int quantity)
     {
         var transaction = _dbInfo.Database.BeginTransaction();
-        var shoppingList = _dbInfo.ShoppingLists.FirstOrDefault(x => x.Id == shoppingListId);
+        var shoppingList = _dbInfo.ShoppingLists
+            .Include(x => x.ShoppingListProducts)
+            .ThenInclude(x => x.CategoryNavigation)
+            .FirstOrDefault(x => x.Id == shoppingListId);
         if (shoppingList is null)
             return new ManagerActionResult(ResultEnum.NotFound);
         if (shoppingList.ShoppingListProducts.Any(x => x.Category == categoryId))
