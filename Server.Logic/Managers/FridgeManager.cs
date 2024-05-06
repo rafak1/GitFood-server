@@ -69,14 +69,14 @@ internal class FridgeManager : IFridgeManager
         if (fridge is null)
             return new ManagerActionResult(ResultEnum.NotFound);
 
-        if (fridge.UserId != user)
-            return new ManagerActionResult(ResultEnum.Forbidden);
+        if (fridge.UserLogin != user)
+            return new ManagerActionResult(ResultEnum.Unauthorized);
 
         foreach (var product in products)
         {
             if(fridge.FridgeProducts.Any(x => x.ProductId == product.productId))
             {
-                int new_quantity = fridge.FridgeProducts.First(x => x.ProductId == product.productId).Ammount + product.quantity;
+                double new_quantity = fridge.FridgeProducts.First(x => x.ProductId == product.productId).Ammount + product.quantity;
                 if(new_quantity < 0)
                 {
                     return new ManagerActionResult(ResultEnum.BadRequest);
@@ -96,7 +96,7 @@ internal class FridgeManager : IFridgeManager
                 {
                     ProductId = product.productId,
                     Ammount = product.quantity,
-                    FridgeId = product.fridgeId
+                    FridgeId = fridgeId
                 });
             }
         }
