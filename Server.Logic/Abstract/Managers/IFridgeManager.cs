@@ -12,4 +12,7 @@ public interface IFridgeManager
     public Task<IManagerActionResult<Fridge[]>> GetAllFridgesAsync(string login);
     public Task<IManagerActionResult<(int Id, string Name)[]>> GetMapForUserAsync(string login);
     public Task<IManagerActionResult> AddProductsToFridgeAsync((int productId, int quantity)[] products,int fridgeId, string user);
+    public Task<IManagerActionResult> ShareFridgeAsync(int fridgeId, string userLogin, string login);
+    public Task<IManagerActionResult> UnshareFridgeAsync(int fridgeId, string userLogin, string login);
+    public Task<IManagerActionResult> BeUnsharedAsync(int fridgeId, string login);
 }

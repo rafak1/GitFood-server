@@ -144,6 +144,13 @@ CREATE TABLE IF NOT EXISTS public.users_follows
     PRIMARY KEY ("user", follows)
 );
 
+CREATE TABLE IF NOT EXISTS public.fridge_shares
+(
+    fridge_id integer,
+    "user" character varying,
+    PRIMARY KEY (fridge_id, "user")
+);
+
 ALTER TABLE IF EXISTS public.fridge
     ADD FOREIGN KEY (user_login)
     REFERENCES public.users (login) MATCH SIMPLE
@@ -298,6 +305,22 @@ ALTER TABLE IF EXISTS public.users_follows
 
 ALTER TABLE IF EXISTS public.users_follows
     ADD FOREIGN KEY (follows)
+    REFERENCES public.users (login) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.fridge_shares
+    ADD FOREIGN KEY (fridge_id)
+    REFERENCES public.fridge (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.fridge_shares
+    ADD FOREIGN KEY ("user")
     REFERENCES public.users (login) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
