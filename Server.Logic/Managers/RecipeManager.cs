@@ -13,16 +13,21 @@ internal class RecipeManager : IRecipeManager
 {
     private readonly GitfoodContext _dbInfo;
     private readonly IPageingManager _pageingManager;
+    private readonly IPathProvider _pathProvider;
+    private readonly IFileSaver _fileSaver;
     private static readonly string _recipeNotFound = "Recipe not found";
 
     private static readonly string _categoryNotFound = "Category not found";
 
     private static readonly string _commentNotFound = "Comment not found";
 
-    public RecipeManager(GitfoodContext database, IPageingManager pageingManager)
+    public RecipeManager(GitfoodContext database, IPageingManager pageingManager,
+     IPathProvider pathProvider, IFileSaver fileSaver)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
         _pageingManager = pageingManager ?? throw new ArgumentNullException(nameof(pageingManager));
+        _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
+        _fileSaver = fileSaver ?? throw new ArgumentNullException(nameof(fileSaver));
     }
 
     public async Task<IManagerActionResult<int>> CreateRecipeAsync(RecipeViewModel recipe, string user)
@@ -41,8 +46,9 @@ internal class RecipeManager : IRecipeManager
         await _dbInfo.SaveChangesAsync();
         var id = newRecipe.Id;
 
-        var markdownPath = $"./recipes/{user}/{recipe.Name}_{id}.md";
-        //TODO File.WriteAllBytes(markdownPath, Encoding.UTF8.GetBytes(recipe.Markdown));
+        var markdownPath = _pathProvider.GetMarkdownPath(user, recipe.Name, id);
+        using var streamToSave = new MemoryStream(Encoding.UTF8.GetBytes(recipe.Markdown ?? ""));
+        await _fileSaver.SaveFileAsync(markdownPath, streamToSave);
 
         newRecipe.MarkdownPath = markdownPath;
 
@@ -92,6 +98,8 @@ internal class RecipeManager : IRecipeManager
         {
             return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
         }
+
+        //TODO: Usuniecie powiazanych plikow (MD + zdj)
 
         _dbInfo.Recipes.Remove(recipe);
         await _dbInfo.SaveChangesAsync();
@@ -170,12 +178,88 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
+    public async Task<IManagerActionResult<Recipe[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] categoryIds)
+    {
+        IQueryable<Recipe> data = _dbInfo.Recipes;
+        if(!searchName.IsNullOrEmpty())
+            data = data.Where(x => x.Name.Contains(searchName));
+        if(categoryIds is not null && categoryIds.Length > 0) 
+        {
+            data = data.Where(x => x.Categories.Any(x => categoryIds.Contains(x.Id)));
+        }
+        return new ManagerActionResult<Recipe[]>(await _pageingManager.GetPagedInfo(data, page, pageSize).ToArrayAsync(),ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult> AddReferenceToRecipeAsync(int id, int referenceId, double multiplayer)
+    {
+        await _dbInfo.RecipeChildren.AddAsync(
+            new RecipeChild()
+            {
+                Recipe = id,
+                Child = referenceId,
+                Multiplier = multiplayer
+            }
+        );
+        await _dbInfo.SaveChangesAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult> RemoveReferenceToRecipeAsync(int id, int referenceId)
+    {
+        await _dbInfo.RecipeChildren.Where(x => x.Recipe == id && x.Child == referenceId).ExecuteDeleteAsync();
+        await _dbInfo.SaveChangesAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult> UpdateDescriptionAsync(int id, string description)
+    {
+        await _dbInfo.Recipes.Where(x => x.Id == id).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Description, description));
+        await _dbInfo.SaveChangesAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult> UpdateNameAsync(int id, string name)
+    {
+        await _dbInfo.Recipes.Where(x => x.Id == id).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Name, name));
+        await _dbInfo.SaveChangesAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult> DeleteImageAsync(int recipeId, string imageName)
+    {
+        await _dbInfo.RecipiesImages.Where(x => x.Recipe == recipeId && x.Name == imageName).ExecuteDeleteAsync();
+        await _dbInfo.SaveChangesAsync();
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        var imagePath = _pathProvider.GetImagePath(recipeId, imageName, recipe.Author, recipe.Name);
+
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult> UpdateIngredientsAsync(int recipeId, int categoryId, double quantity) 
+    {
+        var changed = await _dbInfo.RecipiesIngredients.Where(x => x.Reciepie == recipeId && x.Category == categoryId).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Quantity, quantity));
+        await _dbInfo.SaveChangesAsync();
+        if(changed == 0) 
+        {
+            await _dbInfo.RecipiesIngredients.AddAsync(new RecipiesIngredient
+            {
+                Reciepie = recipeId,
+                Category = categoryId,
+                Quantity = quantity
+            });
+            await _dbInfo.SaveChangesAsync();
+        }
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
     private async void AddAndSaveImages(Recipe recipe, RecipeViewModel recipeViewModel)
     {
         foreach (var image in recipeViewModel.Images)
         {
-            var imagePath = $"./recipes/{recipe.Author}/{recipe.Name}_{recipe.Id}_{image.Name}.png";
-            //TODO File.WriteAllBytes(imagePath, image.Data);
+            var imagePath = _pathProvider.GetImagePath(recipe.Id, image.Name, recipe.Author, recipe.Name);
+            using var streamToSave = new MemoryStream();
+            await image.Image.CopyToAsync(streamToSave);
+            await _fileSaver.SaveFileAsync(imagePath, streamToSave);
 
             var newImage = new RecipiesImage
             {
@@ -210,16 +294,4 @@ internal class RecipeManager : IRecipeManager
         }
     }
 
-    public async Task<IManagerActionResult<Recipe[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] categoryIds)
-    {
-        IQueryable<Recipe> data = _dbInfo.Recipes;
-        if(!searchName.IsNullOrEmpty())
-            data = data.Where(x => x.Name.Contains(searchName));
-        if(categoryIds is not null && categoryIds.Length > 0) 
-        {
-            var categoryIdsContainer = categoryIds.ToHashSet();
-            data = data.Where(x => x.Categories.Any(y => categoryIdsContainer.Contains(y.Id)));
-        }
-        return new ManagerActionResult<Recipe[]>(await _pageingManager.GetPagedInfo(data, page, pageSize).ToArrayAsync(),ResultEnum.OK);
-    }
 }

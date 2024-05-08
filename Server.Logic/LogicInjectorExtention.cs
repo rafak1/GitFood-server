@@ -21,7 +21,9 @@ public static class LogicInjectorExtention
 
     private static IServiceCollection AddBasicLogic(this IServiceCollection injector)
     {
-        return injector.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        return injector.AddSingleton<IDateTimeProvider, DateTimeProvider>()
+            .AddSingleton<IPathProvider, PathProvider>()
+            .AddSingleton<IFileSaver, FileSaver>();
     }
 
     private static IServiceCollection AddManagers(this IServiceCollection injector)
