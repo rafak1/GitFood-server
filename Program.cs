@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,7 +79,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("corsapp");
 
-
+app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider("/home/pijayson/recipes"),
+    RequestPath = "/recipe_files" // URL path to access the files
+});
 //app.UseHttpsRedirection();
 
 app.UseAuthorization();
