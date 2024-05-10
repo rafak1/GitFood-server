@@ -82,11 +82,14 @@ public partial class GitfoodContext : DbContext
             entity.ToTable("categories");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.IsVerified).HasColumnName("is_verified");
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasColumnType("character varying")
                 .HasColumnName("name");
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasColumnType("character varying")
+                .HasColumnName("status");
             entity.Property(e => e.Unit)
                 .HasColumnType("character varying")
                 .HasColumnName("unit");
@@ -449,4 +452,5 @@ public partial class GitfoodContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
+
 

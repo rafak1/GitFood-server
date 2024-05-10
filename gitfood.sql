@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.categories
 (
     id serial NOT NULL,
     name character varying NOT NULL,
-    is_verified boolean NOT NULL,
+    status character varying NOT NULL,
     unit character varying,
     PRIMARY KEY (id)
 );

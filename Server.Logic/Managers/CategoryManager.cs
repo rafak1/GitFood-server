@@ -26,7 +26,7 @@ internal class CategoryManager : ICategoryManager
         await _dbInfo.Categories.AddAsync(new Category() {
             Name = category.Name,
             Unit = category.Unit,
-            IsVerified = false
+            Status = CategoryStatus.UnConfirmed.ToString()
         });
 
         await _dbInfo.SaveChangesAsync();
@@ -52,7 +52,7 @@ internal class CategoryManager : ICategoryManager
 
     public async Task<IManagerActionResult<Category[]>> GetVerifiedCategoriesAsync() 
     {
-        var categories = await _dbInfo.Categories.Where(x => x.IsVerified).ToArrayAsync();
+        var categories = await _dbInfo.Categories.Where(x => x.Status == CategoryStatus.Confirmed.ToString()).ToArrayAsync();
         return new ManagerActionResult<Category[]>(categories, ResultEnum.OK);
     }
 
