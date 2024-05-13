@@ -9,7 +9,7 @@ public partial class Category
 
     public string Name { get; set; }
 
-    public bool IsVerified { get; set; }
+    public string Status { get; set; }
 
     public string Unit { get; set; }
 

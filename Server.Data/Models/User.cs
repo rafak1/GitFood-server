@@ -19,6 +19,8 @@ public partial class User
 
     public virtual ICollection<User> Follows { get; set; } = new List<User>();
 
+    public virtual ICollection<Fridge> FridgesNavigation { get; set; } = new List<Fridge>();
+
     public virtual ICollection<Recipe> RecipesNavigation { get; set; } = new List<Recipe>();
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();

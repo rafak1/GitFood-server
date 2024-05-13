@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.categories
 (
     id serial NOT NULL,
     name character varying NOT NULL,
-    is_verified boolean NOT NULL,
+    status character varying NOT NULL,
     unit character varying,
     PRIMARY KEY (id)
 );
@@ -142,6 +142,13 @@ CREATE TABLE IF NOT EXISTS public.users_follows
     "user" character varying,
     follows character varying,
     PRIMARY KEY ("user", follows)
+);
+
+CREATE TABLE IF NOT EXISTS public.fridge_shares
+(
+    fridge_id integer,
+    "user" character varying,
+    PRIMARY KEY (fridge_id, "user")
 );
 
 ALTER TABLE IF EXISTS public.fridge
@@ -298,6 +305,22 @@ ALTER TABLE IF EXISTS public.users_follows
 
 ALTER TABLE IF EXISTS public.users_follows
     ADD FOREIGN KEY (follows)
+    REFERENCES public.users (login) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.fridge_shares
+    ADD FOREIGN KEY (fridge_id)
+    REFERENCES public.fridge (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.fridge_shares
+    ADD FOREIGN KEY ("user")
     REFERENCES public.users (login) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION

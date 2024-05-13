@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-
+﻿
 namespace Server.Data.Models;
 
 public partial class Fridge
@@ -12,6 +11,7 @@ public partial class Fridge
 
     public virtual ICollection<FridgeProduct> FridgeProducts { get; set; } = new List<FridgeProduct>();
 
-    [JsonIgnore]
     public virtual User UserLoginNavigation { get; set; }
+
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

@@ -82,11 +82,14 @@ public partial class GitfoodContext : DbContext
             entity.ToTable("categories");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.IsVerified).HasColumnName("is_verified");
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasColumnType("character varying")
                 .HasColumnName("name");
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasColumnType("character varying")
+                .HasColumnName("status");
             entity.Property(e => e.Unit)
                 .HasColumnType("character varying")
                 .HasColumnName("unit");
@@ -127,6 +130,27 @@ public partial class GitfoodContext : DbContext
                 .HasForeignKey(d => d.UserLogin)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fridge_user_login_fkey");
+
+            entity.HasMany(d => d.Users).WithMany(p => p.FridgesNavigation)
+                .UsingEntity<Dictionary<string, object>>(
+                    "FridgeShare",
+                    r => r.HasOne<User>().WithMany()
+                        .HasForeignKey("User")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("fridge_shares_user_fkey"),
+                    l => l.HasOne<Fridge>().WithMany()
+                        .HasForeignKey("FridgeId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("fridge_shares_fridge_id_fkey"),
+                    j =>
+                    {
+                        j.HasKey("FridgeId", "User").HasName("fridge_shares_pkey");
+                        j.ToTable("fridge_shares");
+                        j.IndexerProperty<int>("FridgeId").HasColumnName("fridge_id");
+                        j.IndexerProperty<string>("User")
+                            .HasColumnType("character varying")
+                            .HasColumnName("user");
+                    });
         });
 
         modelBuilder.Entity<FridgeProduct>(entity =>
@@ -428,3 +452,5 @@ public partial class GitfoodContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
+
+

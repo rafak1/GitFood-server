@@ -94,4 +94,37 @@ public class FridgeController : BaseController
 
         return (await _fridgeManager.GetMapForUserAsync(user)).MapToActionResult();
     }
+
+    [HttpPatch]
+    [Route($"{_controllerRoute}/share")]
+    public async Task<IActionResult> ShareFridge(int fridgeId, string userLogin)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _fridgeManager.ShareFridgeAsync(fridgeId, userLogin, user)).MapToActionResult();
+    }
+
+    [HttpDelete]
+    [Route($"{_controllerRoute}/unshare")]
+    public async Task<IActionResult> UnshareFridge(int fridgeId, string userLogin)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _fridgeManager.UnshareFridgeAsync(fridgeId, userLogin, user)).MapToActionResult();
+    }
+
+    [HttpDelete]
+    [Route($"{_controllerRoute}/beUnshared")]
+    public async Task<IActionResult> BeUnshared(int fridgeId)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _fridgeManager.BeUnsharedAsync(fridgeId, user)).MapToActionResult();
+    }
 }
