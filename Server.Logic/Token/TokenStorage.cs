@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Server.Logic.Abstract;
 using Server.Logic.Abstract.Authentication;
 using Server.Logic.Abstract.Token;
@@ -6,7 +7,7 @@ namespace Server.Logic.Token;
 
 internal class TokenStorage : ITokenStorage
 {
-    private readonly Dictionary<string, (long CreationTime , string User)> _tokens = new Dictionary<string, (long , string)>();
+    private readonly ConcurrentDictionary<string, (long CreationTime , string User)> _tokens = new ConcurrentDictionary<string, (long , string)>();
     private readonly ITokenConfigProvider _tokenConfigProvider;
     private readonly IDateTimeProvider _dateTimeProvider;
     private long lastPurge = 0;
@@ -22,7 +23,7 @@ internal class TokenStorage : ITokenStorage
     {
         var currentTime = _dateTimeProvider.GetCurrentMiliseconds();
         PurgeIfTime(currentTime);
-        _tokens.Add(token, (currentTime, user));
+        _tokens.TryAdd(token, (currentTime, user));
     }
 
     public string GetUser(string token)
@@ -38,7 +39,7 @@ internal class TokenStorage : ITokenStorage
         lastPurge = currentTime;
         _tokens.Where(t => currentTime - t.Value.CreationTime > _tokenConfigProvider.GetJwtExpireMinutes() * 60 * 1000)
             .ToList()
-            .ForEach(t => _tokens.Remove(t.Key));
+            .ForEach(t => _tokens.Remove(t.Key, out _));
     }
 
     public void RemoveUser(string user)
@@ -46,6 +47,6 @@ internal class TokenStorage : ITokenStorage
         PurgeIfTime(_dateTimeProvider.GetCurrentMiliseconds());
         _tokens.Where(t => t.Value.User == user)
             .ToList()
-            .ForEach(t => _tokens.Remove(t.Key));
+            .ForEach(t => _tokens.Remove(t.Key, out _));
     }
 }
