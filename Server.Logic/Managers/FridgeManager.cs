@@ -58,7 +58,7 @@ internal class FridgeManager : IFridgeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> AddProductsToFridgeAsync((int productId, int quantity)[] products,int fridgeId, string user)
+    public async Task<IManagerActionResult> AddProductsToFridgeAsync(FridgeAddProductViewModel[] products,int fridgeId, string user)
     {
         var transaction = await _dbInfo.Database.BeginTransactionAsync();
 
@@ -76,28 +76,28 @@ internal class FridgeManager : IFridgeManager
 
         foreach (var product in products)
         {
-            if(fridge.FridgeProducts.Any(x => x.ProductId == product.productId))
+            if(fridge.FridgeProducts.Any(x => x.ProductId == product.ProductId))
             {
-                double new_quantity = ((double) fridge.FridgeProducts.First(x => x.ProductId == product.productId).Ammount) + product.quantity;
+                double new_quantity = ((double) fridge.FridgeProducts.First(x => x.ProductId == product.ProductId).Ammount) + product.Quantity;
                 if(new_quantity < 0)
                 {
                     return new ManagerActionResult(ResultEnum.BadRequest);
                 }
                 else if(new_quantity == 0)
                 {
-                    fridge.FridgeProducts.Remove(fridge.FridgeProducts.First(x => x.ProductId == product.productId));
+                    fridge.FridgeProducts.Remove(fridge.FridgeProducts.First(x => x.ProductId == product.ProductId));
                 }
                 else
                 {
-                    fridge.FridgeProducts.First(x => x.ProductId == product.productId).Ammount = new_quantity;
+                    fridge.FridgeProducts.First(x => x.ProductId == product.ProductId).Ammount = new_quantity;
                 }
             }
             else
             {
                 fridge.FridgeProducts.Add(new FridgeProduct
                 {
-                    ProductId = product.productId,
-                    Ammount = product.quantity,
+                    ProductId = product.ProductId,
+                    Ammount = product.Quantity,
                     FridgeId = fridgeId
                 });
             }
@@ -107,7 +107,7 @@ internal class FridgeManager : IFridgeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<Fridge>> GetFridgeAsync(int fridgeId, string user)
+    public async Task<IManagerActionResult<FridgeViewModel>> GetFridgeAsync(int fridgeId, string user)
     {
         var fridge = await _dbInfo.Fridges
             .Include(x => x.Users)
@@ -116,8 +116,8 @@ internal class FridgeManager : IFridgeManager
             .ThenInclude(x => x.CategoryNavigation)
             .FirstOrDefaultAsync(x => x.Id == fridgeId && (x.UserLogin == user || x.Users.Any(x => x.Login == user)));
         if (fridge is null)
-            return new ManagerActionResult<Fridge>(null, ResultEnum.NotFound);
-        return new ManagerActionResult<Fridge>(fridge, ResultEnum.OK);
+            return new ManagerActionResult<FridgeViewModel>(null, ResultEnum.NotFound);
+        return new ManagerActionResult<FridgeViewModel>(ConvertToFridgeViewModel(fridge), ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult<int>> CreateFridgeAsync(string name, string login)
@@ -145,7 +145,7 @@ internal class FridgeManager : IFridgeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<(Fridge[] fridges, Fridge[] shared)>> GetAllFridgesAsync(string login)
+    public async Task<IManagerActionResult<AllFridgesViewModel>> GetAllFridgesAsync(string login)
     {
         var fridges = await _dbInfo.Fridges
             .Include(x => x.Users)
@@ -158,8 +158,17 @@ internal class FridgeManager : IFridgeManager
             .Include(x => x.FridgeProducts)
             .ThenInclude(x => x.Product)
             .ThenInclude(x => x.CategoryNavigation)
-            .Where(x => x.Users.Any(x => x.Login == login)).ToArrayAsync();
-        return new ManagerActionResult<(Fridge[] fridges, Fridge[] shared)>((fridges, shared), ResultEnum.OK);
+            .Where(x => x.Users.Any(x => x.Login == login))
+            .ToArrayAsync();
+
+        var sharedFridges = shared.Select(ConvertToFridgeViewModel).ToArray();
+        var fridgesViewModel = fridges.Select(ConvertToFridgeViewModel).ToArray();
+
+        return new ManagerActionResult<AllFridgesViewModel>(new AllFridgesViewModel
+        {
+            Fridges = fridgesViewModel,
+            SharedFridges = sharedFridges
+        }, ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult<(int Id, string Name, bool is_shared)[]>> GetMapForUserAsync(string login)
@@ -224,5 +233,30 @@ internal class FridgeManager : IFridgeManager
 
         await _dbInfo.SaveChangesAsync();
         return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    private FridgeViewModel ConvertToFridgeViewModel(Fridge fridge)
+    {
+        var fridgeProductsViewModels = fridge.FridgeProducts.Select(x => new FridgeProductViewModel
+        {
+            Name = x.Product.Name,
+            Description = x.Product.Description,
+            Barcode = x.Product.Barcode,
+            Id = x.Product.Id,
+            Quantity = x.Ammount,
+            CategoryName = x.Product.CategoryNavigation.Name,
+            CategoryStatus = x.Product.CategoryNavigation.Status,
+            CategoryUnit = x.Product.CategoryNavigation.Unit,
+            CategoryId = x.Product.CategoryNavigation.Id
+        }).ToList();
+
+        return new FridgeViewModel
+        {
+            FridgeId = fridge.Id,
+            Name = fridge.Name,
+            Owner = fridge.UserLogin,
+            Products = fridgeProductsViewModels,
+            SharedWith = fridge.Users.Select(x => x.Login).ToArray()
+        };
     }
 }

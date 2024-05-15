@@ -42,12 +42,12 @@ public class FridgeController : BaseController
 
     [HttpPatch]
     [Route($"{_controllerRoute}/addProducts")]
-    public async Task<IActionResult> AddProductsToFridge((int productId, int quantity)[] products, int fridgeId){
+    public async Task<IActionResult> AddProductsToFridge(FridgeProductsViewModel fridgeProductsViewModel){
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
 
-        return (await _fridgeManager.AddProductsToFridgeAsync(products,fridgeId,  user)).MapToActionResult();
+        return (await _fridgeManager.AddProductsToFridgeAsync(fridgeProductsViewModel.Products ,fridgeProductsViewModel.FridgeId, user)).MapToActionResult();
     }
 
     [HttpDelete]
