@@ -24,4 +24,26 @@ public class FoodCategoriesController : BaseController
     public async Task<IActionResult> GetFoodCategoriesAsync()
         => (await _foodCategoryManager.GetAllFoodCategoriesAsync()).MapToActionResult();
 
+    [HttpPost]
+    [Route($"{_controllerRoute}/add")]
+    public async Task<IActionResult> AddFoodCategoryAsync(string name, string descritption)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _foodCategoryManager.AddFoodCategoryAsync(name, descritption, user)).MapToActionResult();
+    }
+
+    [HttpDelete]
+    [Route($"{_controllerRoute}/remove")]
+    public async Task<IActionResult> RemoveFoodCategoryAsync(int foodCategoryId)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _foodCategoryManager.RemoveFoodCategoryAsync(foodCategoryId, user)).MapToActionResult();
+    }
+
 }
