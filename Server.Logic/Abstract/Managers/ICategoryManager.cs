@@ -11,5 +11,5 @@ public interface ICategoryManager
     public Task<IManagerActionResult<Category[]>> GetVerifiedCategoriesAsync();
     public Task<IManagerActionResult> DeleteCategoryAsync(int id);
     public Task<IManagerActionResult<string[]>> GetUnitsAsync();
-    public Task<IManagerActionResult<Category[]>> GetSuggestionsAsync(name, resultsCount);
+    public Task<IManagerActionResult<Category[]>> GetSuggestionsAsync(string name, int resultsCount);
 }

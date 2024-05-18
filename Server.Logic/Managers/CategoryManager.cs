@@ -69,7 +69,7 @@ internal class CategoryManager : ICategoryManager
     }
 
 
-    public Task<IManagerActionResult<Category[]>> GetSuggestionsAsync(name, resultsCount)
+    public Task<IManagerActionResult<Category[]>> GetSuggestionsAsync(string name, int resultsCount)
     {
         var categories = _dbInfo.Categories.Where(x => x.Name.Contains(name)).Take(resultsCount).ToArrayAsync();
         return new ManagerActionResult<Category[]>(categories, ResultEnum.OK);
