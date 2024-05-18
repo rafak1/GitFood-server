@@ -67,4 +67,11 @@ internal class CategoryManager : ICategoryManager
         var units = Enum.GetNames(typeof(Units));
         return new ManagerActionResult<string[]>(units, ResultEnum.OK);
     }
+
+
+    public Task<IManagerActionResult<Category[]>> GetSuggestionsAsync(name, resultsCount)
+    {
+        var categories = _dbInfo.Categories.Where(x => x.Name.Contains(name)).Take(resultsCount).ToArrayAsync();
+        return new ManagerActionResult<Category[]>(categories, ResultEnum.OK);
+    }
 }

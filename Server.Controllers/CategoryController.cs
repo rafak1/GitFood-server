@@ -54,4 +54,10 @@ public class CategoryController : BaseController
     [Route($"{_controllerRoute}/getUnits")]
     public async Task<IActionResult> GetUnitsAsync() 
         => (await _categoryManager.GetUnitsAsync()).MapToActionResult();
+
+
+    [HttpGet]
+    [Route($"{_controllerRoute}/getSuggestions")]
+    public async Task<IActionResult> GetSuggestionsAsync(string name, int resultsCount) 
+        => (await _categoryManager.GetSuggestionsAsync(name, resultsCount)).MapToActionResult();
 }

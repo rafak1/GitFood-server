@@ -7,4 +7,5 @@ public interface IFoodCategoryManager
     public Task<IManagerActionResult<FoodCategory[]>> GetAllFoodCategoriesAsync();
     public Task<IManagerActionResult<int>> AddFoodCategoryAsync(string name, string description, string user);
     public Task<IManagerActionResult> RemoveFoodCategoryAsync(int foodCategoryId, string user);
+    public Task<IManagerActionResult<FoodCategory[]>> GetFoodCategorySuggestionsAsync(string name, int resultsCount);
 }

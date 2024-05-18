@@ -46,4 +46,9 @@ public class FoodCategoriesController : BaseController
         return (await _foodCategoryManager.RemoveFoodCategoryAsync(foodCategoryId, user)).MapToActionResult();
     }
 
+    [HttpGet]
+    [Route($"{_controllerRoute}/getSuggestions")]
+    public async Task<IActionResult> GetFoodCategorySuggestionsAsync(string name, int resultsCount)
+        => (await _foodCategoryManager.GetFoodCategorySuggestionsAsync(name, resultsCount)).MapToActionResult();
+
 }
