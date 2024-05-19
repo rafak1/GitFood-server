@@ -46,11 +46,7 @@ internal class RecipeManager : IRecipeManager
         await _dbInfo.SaveChangesAsync();
         var id = newRecipe.Id;
 
-        var markdownPath = _pathProvider.GetMarkdownPath(user, recipe.Name, id);
-        using var streamToSave = new MemoryStream(Encoding.UTF8.GetBytes(recipe.Markdown ?? ""));
-        await _fileSaver.SaveFileAsync(markdownPath, streamToSave);
-
-        newRecipe.MarkdownPath = markdownPath;
+        newRecipe.MarkdownPath = await SaveMarkdownAsync(id, recipe.Markdown);
 
         await _dbInfo.SaveChangesAsync();
 
@@ -73,17 +69,10 @@ internal class RecipeManager : IRecipeManager
 
         await _dbInfo.SaveChangesAsync();
 
-        //Images
-
-        if (recipe.Images != null)
-        {
-            AddAndSaveImages(newRecipe, recipe);
-        }
-
         //Ingredients
-        if(recipe.Ingredients != null)
+        if(recipe.Ingredients != null && recipe.Ingredients.Count > 0)
         {
-            AddIngredients(newRecipe, recipe);
+            await AddIngredientsAsync(newRecipe, recipe);
         }
 
         await transaction.CommitAsync();
@@ -218,19 +207,19 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> UpdateNameAsync(int id, string name)
+    public async Task<IManagerActionResult> UpdateRecipeNameAsync(int id, string name)
     {
         await _dbInfo.Recipes.Where(x => x.Id == id).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Name, name));
         await _dbInfo.SaveChangesAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> DeleteImageAsync(int recipeId, string imageName)
+    private async Task<IManagerActionResult> DeleteImageAsync(int recipeId, string imageName)
     {
         await _dbInfo.RecipiesImages.Where(x => x.Recipe == recipeId && x.Name == imageName).ExecuteDeleteAsync();
         await _dbInfo.SaveChangesAsync();
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
-        var imagePath = _pathProvider.GetImagePath(recipeId, imageName, recipe.Author, recipe.Name);
+        var imagePath = _pathProvider.GetImagePath(recipeId, imageName);
 
         return new ManagerActionResult(ResultEnum.OK);
     }
@@ -252,29 +241,51 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    private async void AddAndSaveImages(Recipe recipe, RecipeViewModel recipeViewModel)
+    public async Task<IManagerActionResult<string[]>> AddImagesAsync(int recipeId, RecipeImageViewModel[] images)
     {
-        foreach (var image in recipeViewModel.Images)
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        if(recipe is null)
+            return new ManagerActionResult<string[]>(null, ResultEnum.BadRequest);
+        using var transaction = await _dbInfo.Database.BeginTransactionAsync();
+        var imagesUri = new List<string>();
+        foreach (var image in images)
         {
-            var imagePath = _pathProvider.GetImagePath(recipe.Id, image.Name, recipe.Author, recipe.Name);
-            using var streamToSave = new MemoryStream();
-            await image.Image.CopyToAsync(streamToSave);
-            await _fileSaver.SaveFileAsync(imagePath, streamToSave);
-
-            var newImage = new RecipiesImage
-            {
-                Name = image.Name,
-                ImagePath = imagePath,
-                Recipe = recipe.Id
-            };
-
-            await _dbInfo.RecipiesImages.AddAsync(newImage);
-            recipe.RecipiesImages.Add(newImage);
+            imagesUri.Add(await AddAndSaveImageAsync(recipe, image));
         }
+
+        await transaction.CommitAsync();
+        return new ManagerActionResult<string[]>(imagesUri.ToArray(), ResultEnum.OK);
     }
 
+    public async Task<IManagerActionResult> DeleteImagesAsync(int recipeId, string[] imageNames)
+    {
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        if(recipe is null) 
+            return new ManagerActionResult(ResultEnum.BadRequest);
+        foreach(var imageName in imageNames)
+            await DeleteImageAsync(recipeId, imageName);
+        return new ManagerActionResult(ResultEnum.OK);
 
-    private async void AddIngredients(Recipe recipe, RecipeViewModel recipeViewModel)
+    }
+
+    public async Task<IManagerActionResult> UpdateMarkdownAsync(int recipeId, string markdown)
+    {
+        var recipie = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        if(recipie is null)
+            return new ManagerActionResult(ResultEnum.BadRequest);
+        await SaveMarkdownAsync(recipeId, markdown);
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    private async Task<string> SaveMarkdownAsync(int recipeId, string markdown)
+    {
+        var markdownPath = _pathProvider.GetMarkdownPath(recipeId);
+        using var streamToSave = new MemoryStream(Encoding.UTF8.GetBytes(markdown ?? ""));
+        await _fileSaver.SaveFileAsync(markdownPath, streamToSave);
+        return markdownPath;
+    }
+
+    private async Task AddIngredientsAsync(Recipe recipe, RecipeViewModel recipeViewModel)
     {
         foreach (var ingredient in recipeViewModel.Ingredients)
         {
@@ -294,4 +305,20 @@ internal class RecipeManager : IRecipeManager
         }
     }
 
+    private async Task<string> AddAndSaveImageAsync(Recipe recipe, RecipeImageViewModel image)
+    {
+        var imagePath = _pathProvider.GetImagePath(recipe.Id, image.Name);
+        await _fileSaver.SaveFileAsync(imagePath, image.Image);
+
+        var newImage = new RecipiesImage
+        {
+            Name = image.Name,
+            ImagePath = imagePath,
+            Recipe = recipe.Id
+        };
+
+        await _dbInfo.RecipiesImages.AddAsync(newImage);
+        recipe.RecipiesImages.Add(newImage);
+        return imagePath;
+    }
 }

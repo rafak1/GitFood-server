@@ -8,7 +8,9 @@ public class FileSaver : IFileSaver
 
     public async Task SaveFileAsync(string path, Stream stream)
     {
+        stream.Seek(0, SeekOrigin.Begin);
         using var writer = new FileStream(path, FileMode.Create, FileAccess.Write);
         await stream.CopyToAsync(writer);
+        writer.Close();
     }
 }
