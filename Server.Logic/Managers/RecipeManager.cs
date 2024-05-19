@@ -155,7 +155,7 @@ internal class RecipeManager : IRecipeManager
 
     public async Task<IManagerActionResult> UnlikeRecipeAsync(int recipeId, string user)
     {
-        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
         if (recipe == null)
         {
             return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
@@ -179,8 +179,11 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult<Recipe[]>(await _pageingManager.GetPagedInfo(data, page, pageSize).ToArrayAsync(),ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> AddReferenceToRecipeAsync(int id, int referenceId, double multiplayer)
+    public async Task<IManagerActionResult> AddReferenceToRecipeAsync(int id, int referenceId, double multiplayer, string user)
     {
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == id && x.Author == user);
+        if (recipe == null)
+            return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
         await _dbInfo.RecipeChildren.AddAsync(
             new RecipeChild()
             {
@@ -193,23 +196,26 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> RemoveReferenceToRecipeAsync(int id, int referenceId)
+    public async Task<IManagerActionResult> RemoveReferenceToRecipeAsync(int id, int referenceId, string user)
     {
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == id && x.Author == user);
+        if (recipe == null)
+            return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
         await _dbInfo.RecipeChildren.Where(x => x.Recipe == id && x.Child == referenceId).ExecuteDeleteAsync();
         await _dbInfo.SaveChangesAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> UpdateDescriptionAsync(int id, string description)
+    public async Task<IManagerActionResult> UpdateDescriptionAsync(int id, string description, string user)
     {
-        await _dbInfo.Recipes.Where(x => x.Id == id).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Description, description));
+        await _dbInfo.Recipes.Where(x => x.Id == id && x.Author == user).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Description, description));
         await _dbInfo.SaveChangesAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> UpdateRecipeNameAsync(int id, string name)
+    public async Task<IManagerActionResult> UpdateRecipeNameAsync(int id, string name, string user)
     {
-        await _dbInfo.Recipes.Where(x => x.Id == id).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Name, name));
+        await _dbInfo.Recipes.Where(x => x.Id == id && x.Author == user).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Name, name));
         await _dbInfo.SaveChangesAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
@@ -224,9 +230,9 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> UpdateIngredientsAsync(int recipeId, int categoryId, double quantity) 
+    public async Task<IManagerActionResult> UpdateIngredientsAsync(int recipeId, int categoryId, double quantity, string user) 
     {
-        var changed = await _dbInfo.RecipiesIngredients.Where(x => x.Reciepie == recipeId && x.Category == categoryId).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Quantity, quantity));
+        var changed = await _dbInfo.RecipiesIngredients.Where(x => x.Reciepie == recipeId && x.Category == categoryId && x.ReciepieNavigation.Author == user).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Quantity, quantity));
         await _dbInfo.SaveChangesAsync();
         if(changed == 0) 
         {
@@ -241,9 +247,9 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<string[]>> AddImagesAsync(int recipeId, RecipeImageViewModel[] images)
+    public async Task<IManagerActionResult<string[]>> AddImagesAsync(int recipeId, RecipeImageViewModel[] images, string user)
     {
-        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
         if(recipe is null)
             return new ManagerActionResult<string[]>(null, ResultEnum.BadRequest);
         using var transaction = await _dbInfo.Database.BeginTransactionAsync();
@@ -257,9 +263,9 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult<string[]>(imagesUri.ToArray(), ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> DeleteImagesAsync(int recipeId, string[] imageNames)
+    public async Task<IManagerActionResult> DeleteImagesAsync(int recipeId, string[] imageNames, string user)
     {
-        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
         if(recipe is null) 
             return new ManagerActionResult(ResultEnum.BadRequest);
         foreach(var imageName in imageNames)
@@ -268,9 +274,9 @@ internal class RecipeManager : IRecipeManager
 
     }
 
-    public async Task<IManagerActionResult> UpdateMarkdownAsync(int recipeId, string markdown)
+    public async Task<IManagerActionResult> UpdateMarkdownAsync(int recipeId, string markdown, string user)
     {
-        var recipie = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        var recipie = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
         if(recipie is null)
             return new ManagerActionResult(ResultEnum.BadRequest);
         await SaveMarkdownAsync(recipeId, markdown);

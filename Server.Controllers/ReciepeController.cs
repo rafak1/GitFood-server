@@ -54,7 +54,7 @@ public class RecipeController : BaseController
                     Name = image.FileName,
                 });
             }
-            return (await _recipeManager.AddImagesAsync(recipeId, imageList.ToArray())).MapToActionResult();
+            return (await _recipeManager.AddImagesAsync(recipeId, imageList.ToArray(), user)).MapToActionResult();
         }
         finally
         {
@@ -135,7 +135,7 @@ public class RecipeController : BaseController
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
-        return (await _recipeManager.DeleteImagesAsync(recipeId, imageNames)).MapToActionResult();
+        return (await _recipeManager.DeleteImagesAsync(recipeId, imageNames, user)).MapToActionResult();
     }
 
     [HttpPost]
@@ -145,7 +145,7 @@ public class RecipeController : BaseController
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
-        return (await _recipeManager.UpdateMarkdownAsync(recipeId, markdown)).MapToActionResult();
+        return (await _recipeManager.UpdateMarkdownAsync(recipeId, markdown, user)).MapToActionResult();
     }
 
     [HttpPost]
@@ -155,7 +155,7 @@ public class RecipeController : BaseController
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
-        return (await _recipeManager.UpdateDescriptionAsync(recipeId, description)).MapToActionResult();
+        return (await _recipeManager.UpdateDescriptionAsync(recipeId, description, user)).MapToActionResult();
     }
 
     [HttpPost]
@@ -165,7 +165,7 @@ public class RecipeController : BaseController
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
-        return (await _recipeManager.UpdateIngredientsAsync(recipeId, categoryId, quantity)).MapToActionResult();
+        return (await _recipeManager.UpdateIngredientsAsync(recipeId, categoryId, quantity, user)).MapToActionResult();
     }
 
     [HttpPost]
@@ -185,7 +185,7 @@ public class RecipeController : BaseController
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
-        return (await _recipeManager.UpdateRecipeNameAsync(recipeId, name)).MapToActionResult();
+        return (await _recipeManager.UpdateRecipeNameAsync(recipeId, name, user)).MapToActionResult();
     }
 
     [HttpPost]
@@ -195,7 +195,7 @@ public class RecipeController : BaseController
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
-        return (await _recipeManager.AddReferenceToRecipeAsync(recipeId, referenceId, multiplayer)).MapToActionResult();
+        return (await _recipeManager.AddReferenceToRecipeAsync(recipeId, referenceId, multiplayer, user)).MapToActionResult();
     }
 
     [HttpPost]
@@ -205,6 +205,6 @@ public class RecipeController : BaseController
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
-        return (await _recipeManager.RemoveReferenceToRecipeAsync(recipeId, referenceId)).MapToActionResult();
+        return (await _recipeManager.RemoveReferenceToRecipeAsync(recipeId, referenceId, user)).MapToActionResult();
     }
 }
