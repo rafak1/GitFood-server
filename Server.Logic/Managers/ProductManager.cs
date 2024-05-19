@@ -110,7 +110,8 @@ internal class ProductManager : IProductManager
                 InnerInformation = new CategoryViewModel()
                 {
                     Name = product.CategoryNavigation.Name,
-                    Unit = product.CategoryNavigation.Unit
+                    Unit = product.CategoryNavigation.Unit,
+                    Status = product.CategoryNavigation.Status
                 }
             }
         };

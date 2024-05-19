@@ -93,7 +93,8 @@ internal class CategoryManager : ICategoryManager
                 Id = x.Id,
                 InnerInformation = new CategoryViewModel() {
                     Name = x.Name,
-                    Unit = x.Unit
+                    Unit = x.Unit,
+                    Status = x.Status
                 }
             }).ToArrayAsync();
         
