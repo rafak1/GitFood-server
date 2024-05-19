@@ -67,7 +67,7 @@ internal class FoodCategoryManager : IFoodCategoryManager
 
     public async Task<IManagerActionResult<FoodCategory[]>> GetFoodCategorySuggestionsAsync(string name, int resultsCount)
     {
-        var categories = await _dbInfo.FoodCategories.Where(x => x.Name.Contains(name)).Take(resultsCount).ToArrayAsync();
+        var categories = await _dbInfo.FoodCategories.Where(x => x.Name.ToLower().Contains(name.ToLower())).Take(resultsCount).ToArrayAsync();
         return new ManagerActionResult<FoodCategory[]>(categories, ResultEnum.OK);
     }
 

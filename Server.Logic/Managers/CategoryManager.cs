@@ -4,6 +4,7 @@ using Server.ViewModels.Categories;
 using Server.Logic.Abstract;
 using Server.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Server.Logic.Users;
 
 namespace Server.Logic.Managers;
 
@@ -21,23 +22,30 @@ internal class CategoryManager : ICategoryManager
         if (!Enum.IsDefined(typeof(Units), category.Unit))
             return new ManagerActionResult<int>(0, ResultEnum.BadRequest);
 
+
+        var isElevated = Enum.IsDefined(typeof(ElevatedUsers), user);
+
+        var status = isElevated ? CategoryStatus.Confirmed.ToString() : CategoryStatus.UnConfirmed.ToString();
+
         var transaction = _dbInfo.Database.BeginTransaction();
 
         await _dbInfo.Categories.AddAsync(new Category() {
             Name = category.Name,
             Unit = category.Unit,
-            Status = CategoryStatus.UnConfirmed.ToString()
+            Status = status
         });
 
         await _dbInfo.SaveChangesAsync();
         var id = await _dbInfo.Categories.Where(x => x.Name == category.Name).Select(x => x.Id).FirstOrDefaultAsync();
 
-        await _dbInfo.AddCategoriesRequests.AddAsync(new AddCategoriesRequest() {
-            User = user,
-            Request = id,
-            Datetime = DateOnly.FromDateTime(DateTime.Now)
-        });
-        await _dbInfo.SaveChangesAsync();
+        if(!isElevated){
+            await _dbInfo.AddCategoriesRequests.AddAsync(new AddCategoriesRequest() {
+                User = user,
+                Request = id,
+                Datetime = DateOnly.FromDateTime(DateTime.Now)
+            });
+            await _dbInfo.SaveChangesAsync();
+        }
 
         await transaction.CommitAsync();
 
@@ -71,7 +79,7 @@ internal class CategoryManager : ICategoryManager
 
     public async Task<IManagerActionResult<Category[]>> GetSuggestionsAsync(string name, int resultsCount)
     {
-        var categories = await _dbInfo.Categories.Where(x => x.Name.Contains(name)).Take(resultsCount).ToArrayAsync();
+        var categories = await _dbInfo.Categories.Where(x => x.Name.ToLower().Contains(name.ToLower())).Take(resultsCount).ToArrayAsync();
         return new ManagerActionResult<Category[]>(categories, ResultEnum.OK);
     }
 }
