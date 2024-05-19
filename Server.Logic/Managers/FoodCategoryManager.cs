@@ -5,6 +5,8 @@ using Server.Logic.Abstract;
 using Server.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Server.Logic.Users;
+using Server.ViewModels;
+using Server.ViewModels.FoodCategories;
 
 namespace Server.Logic.Managers;
 
@@ -65,10 +67,25 @@ internal class FoodCategoryManager : IFoodCategoryManager
         }
     }
 
-    public async Task<IManagerActionResult<FoodCategory[]>> GetFoodCategorySuggestionsAsync(string name, int resultsCount)
+    public async Task<IManagerActionResult<IdExtendedViewModel<FoodCategoryViewModel>[]>> GetFoodCategorySuggestionsAsync(string name, int resultsCount)
     {
-        var categories = await _dbInfo.FoodCategories.Where(x => x.Name.ToLower().Contains(name.ToLower())).Take(resultsCount).ToArrayAsync();
-        return new ManagerActionResult<FoodCategory[]>(categories, ResultEnum.OK);
+        IQueryable<FoodCategory> query = _dbInfo.FoodCategories.Include(x => x.Reciepes);
+
+    
+        if(!string.IsNullOrEmpty(name))
+            query = query.Where(x => x.Name.ToLower().Contains(name.ToLower()));
+
+        var result = await query
+            .OrderByDescending(x => x.Reciepes.Count)
+            .Take(resultsCount)
+            .Select(x => new IdExtendedViewModel<FoodCategoryViewModel> {
+                Id = x.Id,
+                InnerInformation = new FoodCategoryViewModel {
+                    Name = x.Name,
+                    Description = x.Description
+                }
+            }).ToArrayAsync();
+        return new ManagerActionResult<IdExtendedViewModel<FoodCategoryViewModel>[]>(result, ResultEnum.OK);
     }
 
 }

@@ -5,6 +5,7 @@ using Server.Logic.Abstract;
 using Server.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Server.Logic.Users;
+using Server.ViewModels;
 
 namespace Server.Logic.Managers;
 
@@ -77,9 +78,25 @@ internal class CategoryManager : ICategoryManager
     }
 
 
-    public async Task<IManagerActionResult<Category[]>> GetSuggestionsAsync(string name, int resultsCount)
+    public async Task<IManagerActionResult<IdExtendedViewModel<CategoryViewModel>[]>> GetSuggestionsAsync(string name, int resultsCount)
     {
-        var categories = await _dbInfo.Categories.Where(x => x.Name.ToLower().Contains(name.ToLower())).Take(resultsCount).ToArrayAsync();
-        return new ManagerActionResult<Category[]>(categories, ResultEnum.OK);
+        IQueryable<Category> query = _dbInfo.Categories.Include(x => x.Products);
+
+    
+        if(!string.IsNullOrEmpty(name))
+            query = query.Where(x => x.Name.ToLower().Contains(name.ToLower()));
+
+        var result = await query
+            .OrderByDescending(x => x.Products.Count)
+            .Take(resultsCount)
+            .Select(x => new IdExtendedViewModel<CategoryViewModel>() {
+                Id = x.Id,
+                InnerInformation = new CategoryViewModel() {
+                    Name = x.Name,
+                    Unit = x.Unit
+                }
+            }).ToArrayAsync();
+        
+        return new ManagerActionResult<IdExtendedViewModel<CategoryViewModel>[]>(result, ResultEnum.OK);
     }
 }
