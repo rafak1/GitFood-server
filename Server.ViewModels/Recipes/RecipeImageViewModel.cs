@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Http;
+
 namespace Server.ViewModels.Recipes;
 
 public class RecipeImageViewModel
 {
-    public required string Name { get; set; }
-    public required byte[] Data { get; set; }
+    public string Name { get; set; }
+    public Stream Image {get; set;}
 }
