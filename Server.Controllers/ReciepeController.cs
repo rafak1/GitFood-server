@@ -140,12 +140,12 @@ public class RecipeController : BaseController
 
     [HttpPost]
     [Route($"{_controllerRoute}/updateMarkdown")]
-    public async Task<IActionResult> UpdateMarkdown(int recipeId, [FromBody] string markdown)
+    public async Task<IActionResult> UpdateMarkdown(int recipeId, [FromBody] MarkdownViewModel markdown)
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
-        return (await _recipeManager.UpdateMarkdownAsync(recipeId, markdown, user)).MapToActionResult();
+        return (await _recipeManager.UpdateMarkdownAsync(recipeId, markdown.Markdown, user)).MapToActionResult();
     }
 
     [HttpPost]
