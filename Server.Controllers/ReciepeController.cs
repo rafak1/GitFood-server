@@ -36,7 +36,7 @@ public class RecipeController : BaseController
     [Consumes("multipart/form-data")]
     
     [Route($"{_controllerRoute}/addPhotos")]
-    public async Task<IActionResult> AddPhotos([FromQuery] int recipeId, [FromForm] IFormFile[] images)
+    public async Task<IActionResult> AddPhotos([FromQuery] int recipeId, [FromForm(Name = "images")] IFormCollection images)
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
@@ -44,7 +44,7 @@ public class RecipeController : BaseController
 
         var imageList = new List<RecipeImageViewModel>();
         try{
-            foreach(var image in images) 
+            foreach(var image in images.Files) 
             {
                 var stream = new MemoryStream();
                 await image.CopyToAsync(stream);
