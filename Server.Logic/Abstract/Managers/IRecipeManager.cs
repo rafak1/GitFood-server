@@ -21,4 +21,5 @@ public interface IRecipeManager
     public Task<IManagerActionResult> RemoveReferenceToRecipeAsync(int id, int referenceId, string user);
     public Task<IManagerActionResult> UpdateDescriptionAsync(int id, string description, string user);
     public Task<IManagerActionResult> UpdateRecipeNameAsync(int id, string name, string user);
+    public Task<IManagerActionResult<RecipesComment[]>> GetRecipeCommentsPagedAsync(int recipeId, int page, int pageSize);
 }

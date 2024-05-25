@@ -102,6 +102,7 @@ internal class RecipeManager : IRecipeManager
             .Include(x => x.RecipiesIngredients)
             .Include(x => x.RecipiesImages)
             .Include(x => x.Categories)
+            .Include(x => x.Users)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (recipe == null)
@@ -165,6 +166,12 @@ internal class RecipeManager : IRecipeManager
         await _dbInfo.SaveChangesAsync();
 
         return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult<RecipesComment[]>> GetRecipeCommentsPagedAsync(int recipeId, int page, int pageSize)
+    {
+        IQueryable<RecipesComment> comments = _dbInfo.RecipesComments.Where(x => x.Recipe == recipeId);
+        return new ManagerActionResult<RecipesComment[]>(await _pageingManager.GetPagedInfo(comments, page, pageSize).ToArrayAsync(), ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult<Recipe[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] categoryIds)

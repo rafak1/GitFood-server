@@ -118,6 +118,17 @@ public class RecipeController : BaseController
         return (await _recipeManager.LikeRecipeAsync(recipeId, user)).MapToActionResult();
     }
 
+    [HttpGet]
+    [Route($"{_controllerRoute}/getCommentsPaged")]
+    public async Task<IActionResult> GetCommentsPaged(int recipeId, int page, int pageSize)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _recipeManager.GetRecipeCommentsPagedAsync(recipeId, page, pageSize)).MapToActionResult();
+    }
+
     [HttpPost]
     [Route($"{_controllerRoute}/getPaged")]
     public async Task<IActionResult> GetRecepiesPaged(int page, int pageSize, [FromBody]RecipeSearchViewModel searchParams)
