@@ -340,6 +340,7 @@ internal class RecipeManager : IRecipeManager
     {
         return new RecipeOutViewModel
         {
+            Id = recipe.Id,
             Name = recipe.Name,
             Description = recipe.Description,
             Author = recipe.Author,
