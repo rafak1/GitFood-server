@@ -96,7 +96,7 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<Recipe>> GetRecipeByIdAsync(int id, string user)
+    public async Task<IManagerActionResult<RecipeOutViewModel>> GetRecipeByIdAsync(int id, string user)
     {
         var recipe = await _dbInfo.Recipes
             .Include(x => x.RecipiesIngredients)
@@ -107,10 +107,10 @@ internal class RecipeManager : IRecipeManager
 
         if (recipe == null)
         {
-            return new ManagerActionResult<Recipe>(null, ResultEnum.BadRequest, _recipeNotFound);
+            return new ManagerActionResult<RecipeOutViewModel>(null, ResultEnum.BadRequest, _recipeNotFound);
         }
 
-        return new ManagerActionResult<Recipe>(recipe, ResultEnum.OK);
+        return new ManagerActionResult<RecipeOutViewModel>(GetRecipeViewModel(recipe), ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult> AddCommentAsync(int recipeId, string comment, string user)
@@ -174,16 +174,17 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult<RecipesComment[]>(await _pageingManager.GetPagedInfo(comments, page, pageSize).ToArrayAsync(), ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<Recipe[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] categoryIds)
+    public async Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] categoryIds)
     {
-        IQueryable<Recipe> data = _dbInfo.Recipes;
+        IQueryable<Recipe> data = _dbInfo.Recipes.Include(x => x.Categories).Include(x => x.Users);
         if(!searchName.IsNullOrEmpty())
             data = data.Where(x => x.Name.Contains(searchName));
         if(categoryIds is not null && categoryIds.Length > 0) 
         {
             data = data.Where(x => x.Categories.Any(x => categoryIds.Contains(x.Id)));
         }
-        return new ManagerActionResult<Recipe[]>(await _pageingManager.GetPagedInfo(data, page, pageSize).ToArrayAsync(),ResultEnum.OK);
+        IQueryable<RecipeOutViewModel> recipes = data.Select(x => GetRecipeViewModel(x));
+        return new ManagerActionResult<RecipeOutViewModel[]>(await _pageingManager.GetPagedInfo(recipes, page, pageSize).ToArrayAsync(),ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult> AddReferenceToRecipeAsync(int id, int referenceId, double multiplayer, string user)
@@ -333,5 +334,31 @@ internal class RecipeManager : IRecipeManager
         await _dbInfo.RecipiesImages.AddAsync(newImage);
         recipe.RecipiesImages.Add(newImage);
         return imagePath;
+    }
+
+    private RecipeOutViewModel GetRecipeViewModel(Recipe recipe)
+    {
+        return new RecipeOutViewModel
+        {
+            Name = recipe.Name,
+            Description = recipe.Description,
+            Author = recipe.Author,
+            MarkdownPath = recipe.MarkdownPath,
+            Ingredients = recipe.RecipiesIngredients.Select(x => new RecipeIngredientViewModel
+            {
+                CategoryId = x.Category,
+                Quantity = x.Quantity
+            }).ToList(),
+            Categories = recipe.Categories.Select(x => x.Id).ToList(),
+            Likes = recipe.Users.Select(x => x.Login).ToList(),
+            Comments = recipe.RecipesComments.Select(x => new RecipeCommentViewModel
+            {
+                Id = x.Id,
+                Message = x.Message,
+                Author = x.User,
+                Likes = x.Likes
+            }).ToList(),
+            ImagePaths = recipe.RecipiesImages.Select(x => x.ImagePath).ToList()
+        };
     }
 }
