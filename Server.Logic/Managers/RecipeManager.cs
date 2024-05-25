@@ -336,7 +336,7 @@ internal class RecipeManager : IRecipeManager
         return imagePath;
     }
 
-    private RecipeOutViewModel GetRecipeViewModel(Recipe recipe)
+    private static RecipeOutViewModel GetRecipeViewModel(Recipe recipe)
     {
         return new RecipeOutViewModel
         {
