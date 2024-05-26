@@ -257,7 +257,6 @@ internal class RecipeManager : IRecipeManager
 
     public async Task<IManagerActionResult<string[]>> AddImagesAsync(int recipeId, RecipeImageViewModel[] images, string user)
     {
-        Console.WriteLine(images);
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
         if(recipe is null)
             return new ManagerActionResult<string[]>(null, ResultEnum.BadRequest);

@@ -38,6 +38,9 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/addPhotos")]
     public async Task<IActionResult> AddPhotos([FromQuery] int recipeId, [FromForm(Name = "images")] IFormFile[] images)
     {
+        return Ok(images);/*
+
+
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return BadRequest(_userNotFound);
@@ -60,7 +63,7 @@ public class RecipeController : BaseController
         {
             foreach(var image in imageList)
                 image.Image.Dispose();
-        }
+        }*/
     }
 
     [HttpDelete]
