@@ -32,9 +32,6 @@ public class RecipeController : BaseController
     }
 
     [HttpPost]
-    
-    [Consumes("multipart/form-data")]
-    
     [Route($"{_controllerRoute}/addPhotos")]
     public async Task<IActionResult> AddPhotos([FromQuery] int recipeId, [FromForm] IFormFile[] images)
     {
