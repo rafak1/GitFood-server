@@ -106,7 +106,7 @@ public class ShoppingListManager : IShoppingListManager
         if (recipe is null)
             return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
 
-        var (double Quantity, int Category)[] shoppingListProducts = recipe.RecipiesIngredients
+        (double Quantity, int Category)[] shoppingListProducts = recipe.RecipiesIngredients
             .Select(x => (x.Quantity, x.Category))
             .ToArray();
 
