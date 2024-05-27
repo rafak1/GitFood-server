@@ -52,7 +52,7 @@ public class ShoppingListController : BaseController
 
     [HttpPatch]
     [Route($"{_controllerRoute}/update")]
-    public async Task<IActionResult> UpdateShoppingList(int shoppingListId, int categoryId, int quantity) 
+    public async Task<IActionResult> UpdateShoppingList(int shoppingListId, int categoryId, double quantity) 
         => (await _shoppingListManager.UpdateShoppingListAsync(shoppingListId, categoryId, quantity)).MapToActionResult();
     
 
