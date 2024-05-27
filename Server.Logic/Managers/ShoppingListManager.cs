@@ -34,8 +34,18 @@ public class ShoppingListManager : IShoppingListManager
 
     public async Task<IManagerActionResult> DeleteShoppingListAsync(int shoppingListId)
     {
-        await _dbInfo.ShoppingLists.Where(x => x.Id == shoppingListId).ExecuteDeleteAsync();
+        var transaction = _dbInfo.Database.BeginTransaction();
+
+        var shoppingListProducts = await _dbInfo.ShoppingListProducts.Where(x => x.ShoppingListId == shoppingListId).ToArrayAsync();
+        _dbInfo.ShoppingListProducts.RemoveRange(shoppingListProducts);
+        
         await _dbInfo.SaveChangesAsync();
+
+        var shoppingList = await _dbInfo.ShoppingLists.FirstOrDefaultAsync(x => x.Id == shoppingListId);
+        _dbInfo.ShoppingLists.Remove(shoppingList);
+
+        await _dbInfo.SaveChangesAsync();
+        await transaction.CommitAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
 
@@ -97,7 +107,7 @@ public class ShoppingListManager : IShoppingListManager
 
     public async Task<IManagerActionResult<int>> CreateShoppingListByRecipeAsync(int recipeId, int[] fridgesId, string user)
     {
-        /*var fridges = await _dbInfo.Fridges.Where(x => fridgesId.Contains(x.Id)).ToArrayAsync();
+        var fridges = await _dbInfo.Fridges.Where(x => fridgesId.Contains(x.Id)).ToArrayAsync();
         var recipe = await _dbInfo.Recipes
             .Include(x => x.RecipiesIngredients)
             .ThenInclude(x => x.CategoryNavigation)
@@ -113,33 +123,33 @@ public class ShoppingListManager : IShoppingListManager
 
         foreach (var fridge in fridges)
         {
-            var fridgeProducts = await _dbInfo.FridgesProducts
+            var fridgeProducts = _dbInfo.FridgeProducts
                 .Include(x => x.Product)
                 .ThenInclude(x => x.CategoryNavigation)
-                .Where(x => x.Fridge == fridge.Id)
-                .Select(x => new { x.Category, x.Quantity });
+                .Where(x => x.FridgeId == fridge.Id)
+                .Select(x => new { x.Product.Category, x.Ammount });
                 
             foreach (var fridgeProduct in fridgeProducts)
             {
-                var shoppingListProduct = shoppingListProducts.FirstOrDefault(x => x.Category == fridgeProduct.Product.Category);
+                var shoppingListProduct = shoppingListProducts.FirstOrDefault(x => x.Category == fridgeProduct.Category);
                 if (shoppingListProduct.Quantity == 0)
                     continue;
-                shoppingListProduct.Quantity -= fridgeProduct.Quantity;
+                shoppingListProduct.Quantity -= fridgeProduct.Ammount ?? 0;
                 if (shoppingListProduct.Quantity <= 0)
-                    shoppingListProducts.Remove(shoppingListProduct);
+                    shoppingListProducts = shoppingListProducts.Where(x => x.Category != fridgeProduct.Category).ToArray();
             }
         }
 
         var transaction = _dbInfo.Database.BeginTransaction();
 
-        await CreateShoppingListAsync(recipe.Name, user);
-
-        var shoppingList = await _dbInfo.ShoppingLists
-            .Include(x => x.ShoppingListProducts)
-            .ThenInclude(x => x.CategoryNavigation)
-            .FirstOrDefaultAsync(x => x.User == user && x.Name == recipe.Name);
+        var shoppingList = new ShoppingList {
+            Name = recipe.Name,
+            User = user
+        };
         
-        var id = shoppingList.Id;
+        await _dbInfo.ShoppingLists.AddAsync(shoppingList);
+        await _dbInfo.SaveChangesAsync();
+        var id = (await _dbInfo.ShoppingLists.Where(x => x.User == user && x.Name == recipe.Name).FirstAsync()).Id;
 
         foreach (var shoppingListProduct in shoppingListProducts)
         {
@@ -150,7 +160,7 @@ public class ShoppingListManager : IShoppingListManager
         }
 
         await _dbInfo.SaveChangesAsync();
-        await transaction.CommitAsync();*/
-        return new ManagerActionResult<int>(0, ResultEnum.OK);
+        await transaction.CommitAsync();
+        return new ManagerActionResult<int>(id, ResultEnum.OK);
     }
 }

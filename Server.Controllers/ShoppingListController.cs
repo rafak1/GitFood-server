@@ -69,7 +69,7 @@ public class ShoppingListController : BaseController
 
     [HttpPost]
     [Route($"{_controllerRoute}/createByRecipe")]
-    public async Task<IActionResult> CreateShoppingListByRecipe([FromQuery] int recipeId, [FromBody] int[] fridgesId) 
+    public async Task<IActionResult> CreateShoppingListByRecipe( int recipeId, int[] fridgesId) 
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
