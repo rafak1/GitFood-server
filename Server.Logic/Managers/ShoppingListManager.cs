@@ -117,7 +117,7 @@ public class ShoppingListManager : IShoppingListManager
                 .Include(x => x.Product)
                 .ThenInclude(x => x.CategoryNavigation)
                 .Where(x => x.Fridge == fridge.Id)
-                .Select(x => new { x.Category, x.Quantity })
+                .Select(x => new { x.Category, x.Quantity });
                 
             foreach (var fridgeProduct in fridgeProducts)
             {
