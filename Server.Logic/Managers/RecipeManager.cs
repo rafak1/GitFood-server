@@ -103,7 +103,7 @@ internal class RecipeManager : IRecipeManager
             .Include(x => x.RecipiesImages)
             .Include(x => x.Categories)
             .Include(x => x.Users)
-            .Include(x => x.RecipiesComments)
+            .Include(x => x.RecipesComments)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (recipe == null)
