@@ -66,4 +66,15 @@ public class ShoppingListController : BaseController
 
         return (await _shoppingListManager.GetShoppingListMapAsync(user)).MapToActionResult();
     }
+
+    [HttpPost]
+    [Route($"{_controllerRoute}/createByRecipe")]
+    public async Task<IActionResult> CreateShoppingListByRecipe([FromQuery] int recipeId, [FromBody] int[] fridgesId) 
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return BadRequest(_userNotFound);
+
+        return (await _shoppingListManager.CreateShoppingListByRecipeAsync(recipeId, fridgesId, user)).MapToActionResult();
+    }
 }

@@ -12,6 +12,8 @@ public class ShoppingListManager : IShoppingListManager
 {
     private readonly GitfoodContext _dbInfo;
 
+    private static readonly string _recipeNotFound = "Recipe not found";
+
     public ShoppingListManager(GitfoodContext dbInfo) 
     {
         _dbInfo = dbInfo ?? throw new ArgumentNullException(nameof(dbInfo));
@@ -64,7 +66,7 @@ public class ShoppingListManager : IShoppingListManager
         return new ManagerActionResult<(int Id, string Name)[]>(shoppingListMap, ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult> UpdateShoppingListAsync(int shoppingListId, int categoryId, int quantity)
+    public async Task<IManagerActionResult> UpdateShoppingListAsync(int shoppingListId, int categoryId, double quantity)
     {
         var transaction = _dbInfo.Database.BeginTransaction();
         var shoppingList = _dbInfo.ShoppingLists
@@ -90,5 +92,57 @@ public class ShoppingListManager : IShoppingListManager
         await _dbInfo.SaveChangesAsync();
         await transaction.CommitAsync();
         return new ManagerActionResult(ResultEnum.OK);
+    }
+
+
+    public async Task<IManagerActionResult<int>> CreateShoppingListByRecipeAsync(int recipeId, int[] fridgesId, string user)
+    {
+        var fridges = await _dbInfo.Fridges.Where(x => fridgesId.Contains(x.Id)).ToArrayAsync();
+        var recipe = await _dbInfo.Recipes
+            .Include(x => x.RecipiesIngredients)
+            .ThenInclude(x => x.CategoryNavigation)
+            .FirstOrDefaultAsync(x => x.Id == recipeId);
+
+        if (recipe is null)
+            return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
+
+        var (double Quantity, int Category)[] shoppingListProducts = recipe.RecipiesIngredients
+            .Select(x => (x.Quantity, x.Category))
+            .ToArray();
+
+        foreach (var fridge in fridges)
+        {
+            var fridgeProducts = await _dbInfo.FridgeProducts
+                .Where(x => x.Fridge == fridge.Id)
+                .ToArrayAsync();
+            foreach (var fridgeProduct in fridgeProducts)
+            {
+                var shoppingListProduct = shoppingListProducts.FirstOrDefault(x => x.Category == fridgeProduct.Category);
+                if (shoppingListProduct == null)
+                    continue;
+                shoppingListProduct.Quantity -= fridgeProduct.Quantity;
+                if (shoppingListProduct.Quantity <= 0)
+                    shoppingListProducts.Remove(shoppingListProduct);
+            }
+        }
+
+        var transaction = _dbInfo.Database.BeginTransaction();
+
+        await CreateShoppingListAsync(recipe.Name, user);
+
+        var id = (await _dbInfo.ShoppingLists.Where(x => x.User == user).FirstAsync()).Id;
+
+        foreach (var shoppingListProduct in shoppingListProducts)
+        {
+            await _dbInfo.ShoppingListProducts.AddAsync(new ShoppingListProduct {
+                ShoppingList = id,
+                Category = shoppingListProduct.Category,
+                Quantity = shoppingListProduct.Quantity
+            });
+        }
+
+        await _dbInfo.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return new ManagerActionResult<int>(id, ResultEnum.OK);
     }
 }

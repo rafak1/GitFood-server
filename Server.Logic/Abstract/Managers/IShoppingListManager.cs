@@ -11,4 +11,5 @@ public interface IShoppingListManager
     public Task<IManagerActionResult<ShoppingList>> GetShoppingListAsync(int shoppingListId);
     public Task<IManagerActionResult> UpdateShoppingListAsync(int shoppingListId, int categoryId, int quantity);
     public Task<IManagerActionResult<(int Id, string Name)[]>> GetShoppingListMapAsync(string user);
+    public Task<IManagerActionResult<int>> CreateShoppingListByRecipeAsync(int recipeId, int[] fridgesId, string user);
 }
