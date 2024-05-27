@@ -108,7 +108,7 @@ public class ShoppingListManager : IShoppingListManager
 
         (double Quantity, int Category)[] shoppingListProducts = recipe.RecipiesIngredients
             .Where(x => x.Quantity != null)
-            .Select(x => if (!x.Quantity.HasValue) (0, x.Category) else ((double)x.Quantity, x.Category))
+            .Select(x => (x.Quantity.Value, x.Category))
             .ToArray();
 
         foreach (var fridge in fridges)
