@@ -104,21 +104,24 @@ public class ShoppingListManager : IShoppingListManager
             .FirstOrDefaultAsync(x => x.Id == recipeId);
 
         if (recipe is null)
-            return new ManagerActionResult<int>(null, ResultEnum.BadRequest, _recipeNotFound);
+            return new ManagerActionResult<int>(-1, ResultEnum.BadRequest, _recipeNotFound);
 
         (double Quantity, int Category)[] shoppingListProducts = recipe.RecipiesIngredients
             .Where(x => x.Quantity != null)
-            .Select(x => (x.Quantity, x.Category))
+            .Select(x => if (!x.Quantity.HasValue) (0, x.Category) else ((double)x.Quantity, x.Category))
             .ToArray();
 
         foreach (var fridge in fridges)
         {
-            var fridgeProducts = await _dbInfo.FridgeProducts
-                .Where(x => x.Fridge.Id == fridge.Id)
-                .ToArrayAsync();
+            var fridgeProducts = await _dbInfo.FridgesProducts
+                .Include(x => x.Product)
+                .ThenInclude(x => x.CategoryNavigation)
+                .Where(x => x.Fridge == fridge.Id)
+                .Select(x => new { x.Category, x.Quantity })
+                
             foreach (var fridgeProduct in fridgeProducts)
             {
-                var shoppingListProduct = shoppingListProducts.FirstOrDefault(x => x.Category == fridgeProduct.Category);
+                var shoppingListProduct = shoppingListProducts.FirstOrDefault(x => x.Category == fridgeProduct.Product.Category);
                 if (shoppingListProduct.Quantity == 0)
                     continue;
                 shoppingListProduct.Quantity -= fridgeProduct.Quantity;
@@ -140,7 +143,7 @@ public class ShoppingListManager : IShoppingListManager
 
         foreach (var shoppingListProduct in shoppingListProducts)
         {
-            await shoppingList.ShoppingListProducts.AddAsync(new ShoppingListProduct {
+            shoppingList.ShoppingListProducts.Add(new ShoppingListProduct {
                 Category = shoppingListProduct.Category,
                 Quantity = shoppingListProduct.Quantity
             });
