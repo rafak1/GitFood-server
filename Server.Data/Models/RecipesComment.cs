@@ -15,6 +15,8 @@ public partial class RecipesComment
 
     public int? Likes { get; set; }
 
+    public DateTime? Date { get; set; }
+
     public virtual Recipe RecipeNavigation { get; set; }
 
     public virtual User UserNavigation { get; set; }

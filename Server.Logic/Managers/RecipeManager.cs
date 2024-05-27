@@ -119,7 +119,8 @@ internal class RecipeManager : IRecipeManager
         {
             Message = comment,
             Recipe = recipeId,
-            User = user
+            User = user,
+            Date = DateTime.Now
         };
         await _dbInfo.RecipesComments.AddAsync(newComment);
         await _dbInfo.SaveChangesAsync();
@@ -357,7 +358,8 @@ internal class RecipeManager : IRecipeManager
                 Id = x.Id,
                 Message = x.Message,
                 Author = x.User,
-                Likes = x.Likes
+                Likes = x.Likes,
+                Date = x.Date
             }).ToList(),
             ImagePaths = recipe.RecipiesImages.Select(x => x.ImagePath).ToList()
         };

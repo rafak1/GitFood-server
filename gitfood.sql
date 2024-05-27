@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS public.recipes_comments
     id serial,
     message character varying,
     likes integer,
+    added timestamp,
     PRIMARY KEY (id)
 );
 

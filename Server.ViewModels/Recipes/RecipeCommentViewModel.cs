@@ -10,4 +10,6 @@ public class RecipeCommentViewModel
     public required string Message { get; set; }
 
     public int? Likes { get; set; }
+
+    public DateTime? Date { get; set; }
 }
