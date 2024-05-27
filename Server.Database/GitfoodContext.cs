@@ -274,7 +274,9 @@ public partial class GitfoodContext : DbContext
             entity.Property(e => e.User)
                 .HasColumnType("character varying")
                 .HasColumnName("user");
-            entity.Property(e => e.Date).HasColumnName("added");
+            entity.Property(e => e.Date)
+                .HasColumnType("timestamp(6)")
+                .HasColumnName("added");
 
             entity.HasOne(d => d.RecipeNavigation).WithMany(p => p.RecipesComments)
                 .HasForeignKey(d => d.Recipe)
