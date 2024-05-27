@@ -120,7 +120,7 @@ internal class RecipeManager : IRecipeManager
             Message = comment,
             Recipe = recipeId,
             User = user,
-            Date = DateTime.Now
+            Date = DateTimeOffset.Now;
         };
         await _dbInfo.RecipesComments.AddAsync(newComment);
         await _dbInfo.SaveChangesAsync();
