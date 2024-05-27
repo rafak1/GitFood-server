@@ -97,7 +97,7 @@ public class ShoppingListManager : IShoppingListManager
 
     public async Task<IManagerActionResult<int>> CreateShoppingListByRecipeAsync(int recipeId, int[] fridgesId, string user)
     {
-        var fridges = await _dbInfo.Fridges.Where(x => fridgesId.Contains(x.Id)).ToArrayAsync();
+        /*var fridges = await _dbInfo.Fridges.Where(x => fridgesId.Contains(x.Id)).ToArrayAsync();
         var recipe = await _dbInfo.Recipes
             .Include(x => x.RecipiesIngredients)
             .ThenInclude(x => x.CategoryNavigation)
@@ -150,7 +150,7 @@ public class ShoppingListManager : IShoppingListManager
         }
 
         await _dbInfo.SaveChangesAsync();
-        await transaction.CommitAsync();
-        return new ManagerActionResult<int>(id, ResultEnum.OK);
+        await transaction.CommitAsync();*/
+        return new ManagerActionResult<int>(0, ResultEnum.OK);
     }
 }
