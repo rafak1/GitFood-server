@@ -104,21 +104,22 @@ public class ShoppingListManager : IShoppingListManager
             .FirstOrDefaultAsync(x => x.Id == recipeId);
 
         if (recipe is null)
-            return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
+            return new ManagerActionResult<int>(null, ResultEnum.BadRequest, _recipeNotFound);
 
         (double Quantity, int Category)[] shoppingListProducts = recipe.RecipiesIngredients
+            .Where(x => x.Quantity != null)
             .Select(x => (x.Quantity, x.Category))
             .ToArray();
 
         foreach (var fridge in fridges)
         {
             var fridgeProducts = await _dbInfo.FridgeProducts
-                .Where(x => x.Fridge == fridge.Id)
+                .Where(x => x.Fridge.Id == fridge.Id)
                 .ToArrayAsync();
             foreach (var fridgeProduct in fridgeProducts)
             {
                 var shoppingListProduct = shoppingListProducts.FirstOrDefault(x => x.Category == fridgeProduct.Category);
-                if (shoppingListProduct == null)
+                if (shoppingListProduct.Quantity == 0)
                     continue;
                 shoppingListProduct.Quantity -= fridgeProduct.Quantity;
                 if (shoppingListProduct.Quantity <= 0)
@@ -130,12 +131,16 @@ public class ShoppingListManager : IShoppingListManager
 
         await CreateShoppingListAsync(recipe.Name, user);
 
-        var id = (await _dbInfo.ShoppingLists.Where(x => x.User == user).FirstAsync()).Id;
+        var shoppingList = await _dbInfo.ShoppingLists
+            .Include(x => x.ShoppingListProducts)
+            .ThenInclude(x => x.CategoryNavigation)
+            .FirstOrDefaultAsync(x => x.User == user && x.Name == recipe.Name);
+        
+        var id = shoppingList.Id;
 
         foreach (var shoppingListProduct in shoppingListProducts)
         {
-            await _dbInfo.ShoppingListProducts.AddAsync(new ShoppingListProduct {
-                ShoppingList = id,
+            await shoppingList.ShoppingListProducts.AddAsync(new ShoppingListProduct {
                 Category = shoppingListProduct.Category,
                 Quantity = shoppingListProduct.Quantity
             });
