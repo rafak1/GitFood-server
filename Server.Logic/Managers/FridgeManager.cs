@@ -138,9 +138,27 @@ internal class FridgeManager : IFridgeManager
 
     public async Task<IManagerActionResult> DeleteFridgeAsync(int fridgeId, string user)
     {
-        var fridge = await _dbInfo.Fridges
-            .Include(x => x.FridgeProducts)
-            .FirstOrDefaultAsync(x => x.Id == fridgeId && x.UserLogin == user);
+        var transaction = await _dbInfo.Database.BeginTransactionAsync();
+        
+        var fridgeProducts = await _dbInfo.FridgeProducts.Where(x => x.FridgeId == fridgeId).ToArrayAsync();
+        _dbInfo.FridgeProducts.RemoveRange(fridgeProducts);
+
+        var fridge = await _dbInfo.Fridges.FirstOrDefaultAsync(x => x.Id == fridgeId && x.UserLogin == user );
+        if (fridge is null){
+            transaction.Rollback();
+            return new ManagerActionResult(ResultEnum.NotFound);
+        }
+
+        var users = await _dbInfo.Fridges.Where(x => x.Id == fridgeId).SelectMany(x => x.Users).ToArrayAsync();
+
+        _dbInfo.Users.RemoveRange(users);
+
+        await _dbInfo.SaveChangesAsync();
+
+        _dbInfo.Fridges.Remove(fridge);
+
+        await _dbInfo.SaveChangesAsync();
+        await transaction.CommitAsync();
             
         return new ManagerActionResult(ResultEnum.OK);
     }
@@ -171,17 +189,28 @@ internal class FridgeManager : IFridgeManager
         }, ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<(int Id, string Name, bool is_shared)[]>> GetMapForUserAsync(string login)
+    public async Task<IManagerActionResult<FridgeMapEntryViewModel[]>> GetMapForUserAsync(string login)
     {
-        var fridges = await _dbInfo.Fridges.Where(x => x.UserLogin == login).ToArrayAsync();
-        var shared = await _dbInfo.Fridges.Where(x => x.Users.Any(x => x.Login == login)).ToArrayAsync();   
+        var fridges = await _dbInfo.Fridges.Include(x => x.Users).Where(x => x.UserLogin == login).ToArrayAsync();
+        var shared = await _dbInfo.Fridges.Include(x => x.Users).Where(x => x.Users.Any(x => x.Login == login)).ToArrayAsync();
 
+        var result = fridges.Select(x => new FridgeMapEntryViewModel
+        {
+            Id = x.Id,
+            Name = x.Name,
+            Owner = x.UserLogin,
+            isShared = false,
+            SharedWith = x.Users.Select(x => x.Login).ToArray()
+        }).Concat(shared.Select(x => new FridgeMapEntryViewModel
+        {
+            Id = x.Id,
+            Name = x.Name,
+            Owner = x.UserLogin,
+            isShared = true,
+            SharedWith = x.Users.Select(x => x.Login).ToArray()
+        })).ToArray();
 
-        (int Id, string Name, bool is_shared)[] result = 
-            fridges.Select(x => (x.Id, x.Name, false)).ToArray()
-            .Concat(shared.Select(x => (x.Id, x.Name, true))).ToArray();
-
-        return new ManagerActionResult<(int Id, string Name, bool is_shared)[]>(result, ResultEnum.OK);
+        return new ManagerActionResult<FridgeMapEntryViewModel[]>(result, ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult> ShareFridgeAsync(int fridgeId, string userLogin, string login)

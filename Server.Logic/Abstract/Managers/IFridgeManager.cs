@@ -10,7 +10,7 @@ public interface IFridgeManager
     public Task<IManagerActionResult> DeleteFridgeAsync(int fridgeId, string user);
     public Task<IManagerActionResult<FridgeViewModel>> GetFridgeAsync(int fridgeId, string user);
     public Task<IManagerActionResult<AllFridgesViewModel>> GetAllFridgesAsync(string login);
-    public Task<IManagerActionResult<(int Id, string Name, bool is_shared)[]>> GetMapForUserAsync(string login);
+    public Task<IManagerActionResult<FridgeMapEntryViewModel[]>> GetMapForUserAsync(string login);
     public Task<IManagerActionResult> AddProductsToFridgeAsync(FridgeAddProductViewModel[] products,int fridgeId, string user);
     public Task<IManagerActionResult> ShareFridgeAsync(int fridgeId, string userLogin, string login);
     public Task<IManagerActionResult> UnshareFridgeAsync(int fridgeId, string userLogin, string login);
