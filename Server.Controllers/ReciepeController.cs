@@ -32,9 +32,21 @@ public class RecipeController : BaseController
     }
 
     [HttpPost]
-
     [Consumes("multipart/form-data")]
+    [Route($"{_controllerRoute}/addOrUpdateMainPhoto")]
+    public async Task<IActionResult> AddOrUpdateMainPhoto([FromQuery] int recipeId, [FromForm] IFormFile image)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return Unauthorized(_userNotFound);
 
+        using var stream = new MemoryStream();
+        await image.CopyToAsync(stream);
+        return (await _recipeManager.AddOrUpdateMainPhoto(recipeId, user, stream, image.FileName)).MapToActionResult();
+    }
+
+    [HttpPost]
+    [Consumes("multipart/form-data")]
     [Route($"{_controllerRoute}/addPhotos")]
     public async Task<IActionResult> AddPhotos([FromQuery] int recipeId, [FromForm] IFormFile[] images)
     {

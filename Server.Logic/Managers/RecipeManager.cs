@@ -15,11 +15,11 @@ internal class RecipeManager : IRecipeManager
     private readonly IPageingManager _pageingManager;
     private readonly IPathProvider _pathProvider;
     private readonly IFileSaver _fileSaver;
-    private static readonly string _recipeNotFound = "Recipe not found";
 
-    private static readonly string _categoryNotFound = "Category not found";
-
-    private static readonly string _commentNotFound = "Comment not found";
+    private const string _recipeNotFound = "Recipe not found";
+    private const string _categoryNotFound = "Category not found";
+    private const string _commentNotFound = "Comment not found";
+    private const string _userIsNotTheAuthor = "User are not the author of the recipe";
 
     public RecipeManager(GitfoodContext database, IPageingManager pageingManager,
      IPathProvider pathProvider, IFileSaver fileSaver)
@@ -110,8 +110,10 @@ internal class RecipeManager : IRecipeManager
         {
             return new ManagerActionResult<RecipeOutViewModel>(null, ResultEnum.BadRequest, _recipeNotFound);
         }
+        var result = GetRecipeViewModel(recipe);
+        await AttachTittleImageToModelAsync(result);
 
-        return new ManagerActionResult<RecipeOutViewModel>(GetRecipeViewModel(recipe), ResultEnum.OK);
+        return new ManagerActionResult<RecipeOutViewModel>(result, ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult> AddCommentAsync(int recipeId, string comment, string user)
@@ -186,7 +188,11 @@ internal class RecipeManager : IRecipeManager
             data = data.Where(x => x.Categories.Any(x => categoryIds.Contains(x.Id)));
         }
         IQueryable<RecipeOutViewModel> recipes = data.Select(x => GetRecipeViewModel(x));
-        return new ManagerActionResult<RecipeOutViewModel[]>(await _pageingManager.GetPagedInfo(recipes, page, pageSize).ToArrayAsync(),ResultEnum.OK);
+        var pagedInfo = await _pageingManager.GetPagedInfo(recipes, page, pageSize).ToArrayAsync();
+        foreach(var info in pagedInfo)
+            await AttachTittleImageToModelAsync(info);
+
+        return new ManagerActionResult<RecipeOutViewModel[]>(pagedInfo,ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult> AddReferenceToRecipeAsync(int id, int referenceId, double multiplayer, string user)
@@ -293,6 +299,27 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
+    public async Task<IManagerActionResult<string>> AddOrUpdateMainPhoto(int recipeId, string user, Stream stream, string fileName)
+    {
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
+        if(recipe is null) 
+            return new ManagerActionResult<string>(_userIsNotTheAuthor ,ResultEnum.BadRequest);
+        var mainImage = await GetMainImageAsync(recipeId);
+        if(mainImage is not null)
+            await DeleteMainImageAsync(recipeId);
+        
+        var path = _pathProvider.GetMainImagePath(recipeId, fileName);
+        await _fileSaver.SaveFileAsync(path , stream);
+        await _dbInfo.RecipiesImages.AddAsync(new RecipiesImage()
+        {
+            Recipe = recipeId,
+            Name = fileName,
+            ImagePath = path
+        });
+        await _dbInfo.SaveChangesAsync();
+        return new ManagerActionResult<string>(path, ResultEnum.OK);
+    }
+
     private async Task<string> SaveMarkdownAsync(int recipeId, string markdown)
     {
         var markdownPath = _pathProvider.GetMarkdownPath(recipeId);
@@ -338,6 +365,21 @@ internal class RecipeManager : IRecipeManager
         return imagePath;
     }
 
+    private async Task<RecipiesImage> GetMainImageAsync(int recipeId)
+        => await _dbInfo.RecipiesImages.FirstOrDefaultAsync(
+            x => x.Recipe == recipeId 
+            && x.ImagePath.Contains(_pathProvider.GetMainImagePathPrefix(recipeId)));
+
+    private async Task<int> DeleteMainImageAsync(int recipeId)
+        => await _dbInfo.RecipiesImages.Where(
+            x => x.Recipe == recipeId 
+            && x.ImagePath.Contains(_pathProvider.GetMainImagePathPrefix(recipeId))
+            ).ExecuteDeleteAsync();
+
+
+    private async Task AttachTittleImageToModelAsync(RecipeOutViewModel model)
+        => model.TitleImage = (await GetMainImageAsync(model.Id))?.ImagePath;
+
     private static RecipeOutViewModel GetRecipeViewModel(Recipe recipe)
     {
         return new RecipeOutViewModel
@@ -362,7 +404,7 @@ internal class RecipeManager : IRecipeManager
                 Likes = x.Likes,
                 Date = x.Date
             }).ToList(),
-            ImagePaths = recipe.RecipiesImages.Select(x => x.ImagePath).ToList()
+            ImagePaths = recipe.RecipiesImages.Select(x => x.ImagePath).ToList(),
         };
     }
 }
