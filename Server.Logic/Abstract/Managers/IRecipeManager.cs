@@ -22,4 +22,5 @@ public interface IRecipeManager
     public Task<IManagerActionResult> UpdateDescriptionAsync(int id, string description, string user);
     public Task<IManagerActionResult> UpdateRecipeNameAsync(int id, string name, string user);
     public Task<IManagerActionResult<RecipesComment[]>> GetRecipeCommentsPagedAsync(int recipeId, int page, int pageSize);
+    public Task<IManagerActionResult<string>> AddOrUpdateMainPhoto(int recipeId, string user, Stream stream, string fileName);
 }
