@@ -154,12 +154,12 @@ internal class FridgeManager : IFridgeManager
 
         var users = await _dbInfo.Fridges.Where(x => x.Id == fridgeId).SelectMany(x => x.Users).ToArrayAsync();
 
-        _dbInfo.Users.RemoveRange(users);
+        foreach (var fridgeUser in users)
+            fridge.Users.Remove(fridgeUser);
 
         await _dbInfo.SaveChangesAsync();
-
-        _dbInfo.Fridges.Remove(fridge);
-
+        
+        await _dbInfo.Fridges.Where(x => x.Id == fridgeId).ExecuteDeleteAsync();
         await _dbInfo.SaveChangesAsync();
         await transaction.CommitAsync();
             
