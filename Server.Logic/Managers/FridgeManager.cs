@@ -121,6 +121,9 @@ internal class FridgeManager : IFridgeManager
     }
 
     public async Task<IManagerActionResult<int>> CreateFridgeAsync(string name, string login)
+       => await new DatabaseExceptionHandler<int>().HandleExceptionsAsync(async () => await CreateFridgeInternalAsync(name, login));
+
+    private async Task<IManagerActionResult<int>> CreateFridgeInternalAsync(string name, string login)
     {
         var transaction = await _dbInfo.Database.BeginTransactionAsync();
 

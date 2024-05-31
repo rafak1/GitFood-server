@@ -23,7 +23,8 @@ public static class LogicInjectorExtention
     {
         return injector.AddSingleton<IDateTimeProvider, DateTimeProvider>()
             .AddSingleton<IPathProvider, PathProvider>()
-            .AddSingleton<IFileSaver, FileSaver>();
+            .AddSingleton<IFileSaver, FileSaver>()
+            .AddSingleton<IRecipeViewModelFactory, RecipeViewModelFactory>();
     }
 
     private static IServiceCollection AddManagers(this IServiceCollection injector)
