@@ -121,6 +121,9 @@ internal class FridgeManager : IFridgeManager
     }
 
     public async Task<IManagerActionResult<int>> CreateFridgeAsync(string name, string login)
+       => await new DatabaseExceptionHandler<int>().HandleExceptionsAsync(async () => await CreateFridgeInternalAsync(name, login));
+
+    private async Task<IManagerActionResult<int>> CreateFridgeInternalAsync(string name, string login)
     {
         var transaction = await _dbInfo.Database.BeginTransactionAsync();
 
@@ -151,12 +154,12 @@ internal class FridgeManager : IFridgeManager
 
         var users = await _dbInfo.Fridges.Where(x => x.Id == fridgeId).SelectMany(x => x.Users).ToArrayAsync();
 
-        _dbInfo.Users.RemoveRange(users);
+        foreach (var fridgeUser in users)
+            fridge.Users.Remove(fridgeUser);
 
         await _dbInfo.SaveChangesAsync();
-
-        _dbInfo.Fridges.Remove(fridge);
-
+        
+        await _dbInfo.Fridges.Where(x => x.Id == fridgeId).ExecuteDeleteAsync();
         await _dbInfo.SaveChangesAsync();
         await transaction.CommitAsync();
             

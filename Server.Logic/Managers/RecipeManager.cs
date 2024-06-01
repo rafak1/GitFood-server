@@ -15,19 +15,21 @@ internal class RecipeManager : IRecipeManager
     private readonly IPageingManager _pageingManager;
     private readonly IPathProvider _pathProvider;
     private readonly IFileSaver _fileSaver;
-
+    private readonly IRecipeViewModelFactory _recipeViewModelFactory;
     private const string _recipeNotFound = "Recipe not found";
     private const string _categoryNotFound = "Category not found";
     private const string _commentNotFound = "Comment not found";
     private const string _userIsNotTheAuthor = "User are not the author of the recipe";
+    private const string _userDoNotLikeRecipe = "User does not like selected recipe";
 
     public RecipeManager(GitfoodContext database, IPageingManager pageingManager,
-     IPathProvider pathProvider, IFileSaver fileSaver)
+     IPathProvider pathProvider, IFileSaver fileSaver, IRecipeViewModelFactory recipeViewModelFactory)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
         _pageingManager = pageingManager ?? throw new ArgumentNullException(nameof(pageingManager));
         _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
         _fileSaver = fileSaver ?? throw new ArgumentNullException(nameof(fileSaver));
+        _recipeViewModelFactory = recipeViewModelFactory ?? throw new ArgumentNullException(nameof(recipeViewModelFactory));
     }
 
     public async Task<IManagerActionResult<int>> CreateRecipeAsync(RecipeViewModel recipe, string user)
@@ -96,7 +98,7 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<RecipeOutViewModel>> GetRecipeByIdAsync(int id, string user)
+    public async Task<IManagerActionResult<RecipeFullViewModel>> GetRecipeByIdAsync(int id, string user)
     {
         var recipe = await _dbInfo.Recipes
             .Include(x => x.RecipiesIngredients)
@@ -108,15 +110,17 @@ internal class RecipeManager : IRecipeManager
 
         if (recipe == null)
         {
-            return new ManagerActionResult<RecipeOutViewModel>(null, ResultEnum.BadRequest, _recipeNotFound);
+            return new ManagerActionResult<RecipeFullViewModel>(null, ResultEnum.BadRequest, _recipeNotFound);
         }
-        var result = GetRecipeViewModel(recipe);
-        await AttachTittleImageToModelAsync(result);
+        var result = _recipeViewModelFactory.CreateFullViewModel(recipe, user, (await GetMainImageAsync(id))?.ImagePath);
 
-        return new ManagerActionResult<RecipeOutViewModel>(result, ResultEnum.OK);
+        return new ManagerActionResult<RecipeFullViewModel>(result, ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult> AddCommentAsync(int recipeId, string comment, string user)
+        => await new DatabaseExceptionHandler().HandleExceptionsAsync(async () => await AddCommentInternalAsync(recipeId, comment, user));
+
+    private async Task<IManagerActionResult> AddCommentInternalAsync(int recipeId, string comment, string user)
     {
         var newComment = new RecipesComment
         {
@@ -146,6 +150,9 @@ internal class RecipeManager : IRecipeManager
     }
 
     public async Task<IManagerActionResult> LikeRecipeAsync(int recipeId, string user)
+        => await new DatabaseExceptionHandler().HandleExceptionsAsync(async () => await LikeRecipeInternalAsync(recipeId, user));
+
+    private async Task<IManagerActionResult> LikeRecipeInternalAsync(int recipeId, string user)
     {
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
         if (recipe == null)
@@ -161,12 +168,14 @@ internal class RecipeManager : IRecipeManager
     public async Task<IManagerActionResult> UnlikeRecipeAsync(int recipeId, string user)
     {
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
-        if (recipe == null)
-        {
+        if (recipe is null)
             return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
-        }
 
-        recipe.Users.Remove(await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == user));
+        var userEntity = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == user);
+        if(userEntity is null)
+            return new ManagerActionResult(ResultEnum.BadRequest, _userDoNotLikeRecipe);
+
+        recipe.Users.Remove(userEntity);
         await _dbInfo.SaveChangesAsync();
 
         return new ManagerActionResult(ResultEnum.OK);
@@ -178,21 +187,22 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult<RecipesComment[]>(await _pageingManager.GetPagedInfo(comments, page, pageSize).ToArrayAsync(), ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] categoryIds)
+    public async Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] categoryIds, string user)
     {
-        IQueryable<Recipe> data = _dbInfo.Recipes.Include(x => x.Categories).Include(x => x.Users);
+        IQueryable<Recipe> data = _dbInfo.Recipes.Include(x => x.Categories);
         if(!searchName.IsNullOrEmpty())
             data = data.Where(x => x.Name.Contains(searchName));
         if(categoryIds is not null && categoryIds.Length > 0) 
         {
             data = data.Where(x => x.Categories.Any(x => categoryIds.Contains(x.Id)));
         }
-        IQueryable<RecipeOutViewModel> recipes = data.Select(x => GetRecipeViewModel(x));
-        var pagedInfo = await _pageingManager.GetPagedInfo(recipes, page, pageSize).ToArrayAsync();
-        foreach(var info in pagedInfo)
-            await AttachTittleImageToModelAsync(info);
 
-        return new ManagerActionResult<RecipeOutViewModel[]>(pagedInfo,ResultEnum.OK);
+        var pagedInfo = await _pageingManager.GetPagedInfo(data, page, pageSize).ToArrayAsync();
+        var result = new List<RecipeOutViewModel>();
+        foreach(var info in pagedInfo)
+            result.Add(_recipeViewModelFactory.CreateBasicViewModel(info, user, (await GetMainImageAsync(info.Id))?.ImagePath));
+
+        return new ManagerActionResult<RecipeOutViewModel[]>(result.ToArray(), ResultEnum.OK);
     }
 
     public async Task<IManagerActionResult> AddReferenceToRecipeAsync(int id, int referenceId, double multiplayer, string user)
@@ -320,6 +330,21 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult<string>(path, ResultEnum.OK);
     }
 
+    public async Task<IManagerActionResult<RecipeExtendedViewModel>> GetRecipeDetailsAsync(int recipeId, string user)
+    {
+        var recipe = await _dbInfo.Recipes
+            .Include(x => x.RecipiesIngredients)
+            .Include(x => x.RecipiesImages)
+            .Include(x => x.Categories)
+            .FirstOrDefaultAsync(x => x.Id == recipeId);
+
+        if (recipe == null)
+            return new ManagerActionResult<RecipeExtendedViewModel>(null, ResultEnum.BadRequest, _recipeNotFound);
+        
+        var result = _recipeViewModelFactory.CreateExtendedViewModel(recipe, user, (await GetMainImageAsync(recipeId))?.ImagePath);
+        return new ManagerActionResult<RecipeExtendedViewModel>(result, ResultEnum.OK);
+    }
+
     private async Task<string> SaveMarkdownAsync(int recipeId, string markdown)
     {
         var markdownPath = _pathProvider.GetMarkdownPath(recipeId);
@@ -375,36 +400,4 @@ internal class RecipeManager : IRecipeManager
             x => x.Recipe == recipeId 
             && x.ImagePath.Contains(_pathProvider.GetMainImagePathPrefix(recipeId))
             ).ExecuteDeleteAsync();
-
-
-    private async Task AttachTittleImageToModelAsync(RecipeOutViewModel model)
-        => model.TitleImage = (await GetMainImageAsync(model.Id))?.ImagePath;
-
-    private static RecipeOutViewModel GetRecipeViewModel(Recipe recipe)
-    {
-        return new RecipeOutViewModel
-        {
-            Id = recipe.Id,
-            Name = recipe.Name,
-            Description = recipe.Description,
-            Author = recipe.Author,
-            MarkdownPath = recipe.MarkdownPath,
-            Ingredients = recipe.RecipiesIngredients.Select(x => new RecipeIngredientViewModel
-            {
-                CategoryId = x.Category,
-                Quantity = x.Quantity
-            }).ToList(),
-            Categories = recipe.Categories.Select(x => x.Id).ToList(),
-            Likes = recipe.Users.Select(x => x.Login).ToList(),
-            Comments = recipe.RecipesComments.Select(x => new RecipeCommentViewModel
-            {
-                Id = x.Id,
-                Message = x.Message,
-                Author = x.User,
-                Likes = x.Likes,
-                Date = x.Date
-            }).ToList(),
-            ImagePaths = recipe.RecipiesImages.Select(x => x.ImagePath).ToList(),
-        };
-    }
 }

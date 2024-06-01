@@ -148,7 +148,7 @@ public class RecipeController : BaseController
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return Unauthorized(_userNotFound);
-        return (await _recipeManager.GetRecipesPagedAsync(page, pageSize, searchParams.SearchName, searchParams.CategoryIds)).MapToActionResult();
+        return (await _recipeManager.GetRecipesPagedAsync(page, pageSize, searchParams.SearchName, searchParams.CategoryIds, user)).MapToActionResult();
     }
 
     [HttpPost]
@@ -230,4 +230,15 @@ public class RecipeController : BaseController
             return Unauthorized(_userNotFound);
         return (await _recipeManager.RemoveReferenceToRecipeAsync(recipeId, referenceId, user)).MapToActionResult();
     }
+
+    [HttpPost]
+    [Route($"{_controllerRoute}/getRecipeDetails")]
+    public async Task<IActionResult> GetRecipeDetails(int recipeId)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return Unauthorized(_userNotFound);
+        return (await _recipeManager.GetRecipeDetailsAsync(recipeId, user)).MapToActionResult();
+    }
+
 }

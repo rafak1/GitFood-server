@@ -41,6 +41,9 @@ internal class LoginManager : ILoginManager
     }
 
     public async Task<IManagerActionResult<string>> RegisterAsync(LoginViewModel login) 
+        => await new DatabaseExceptionHandler<string>().HandleExceptionsAsync(async () => await RegisterInternalAsync(login));
+
+    private async Task<IManagerActionResult<string>> RegisterInternalAsync(LoginViewModel login)
     {
         if(!_checker.IsCorrectPassword(login.Password) || !_checker.isCorrectLogin(login.Login))
             return new ManagerActionResult<string>(null, ResultEnum.BadRequest, _InvalidLoginOrPasswordMessage);
@@ -51,8 +54,6 @@ internal class LoginManager : ILoginManager
             Password = login.Password
         });
         await _dbInfo.SaveChangesAsync();
-
-        //Error handling?
         
         var token = _tokenGenerator.GrantToken();
         _tokenStorage.AddToken(token, login.Login);

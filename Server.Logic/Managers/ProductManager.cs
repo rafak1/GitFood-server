@@ -21,6 +21,9 @@ internal class ProductManager : IProductManager
     }
 
     public async Task<IManagerActionResult<int>> AddProductAsync(ProductViewModel product, string user) 
+        => await new DatabaseExceptionHandler<int>().HandleExceptionsAsync(async () => await AddProductInternalAsync(product, user));
+        
+    private async Task<IManagerActionResult<int>> AddProductInternalAsync(ProductViewModel product, string user) 
     {
         var transaction = await _dbInfo.Database.BeginTransactionAsync();
         await _dbInfo.Products.AddAsync(new Product{

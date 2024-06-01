@@ -9,9 +9,7 @@ public class RecipeOutViewModel
     public required string Author { get; set; }
     public required string MarkdownPath { get; set; }
     public string? TitleImage { get; set; } 
-    public List<RecipeIngredientViewModel>? Ingredients { get; set; }
+    public int NumberOfLikes;
+    public bool IsLiked;
     public List<int>? Categories { get; set; }
-    public List<string>? Likes { get; set; }
-    public List<RecipeCommentViewModel>? Comments { get; set; }
-    public List<string>? ImagePaths { get; set; }
 }
