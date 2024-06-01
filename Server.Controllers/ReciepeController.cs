@@ -231,14 +231,24 @@ public class RecipeController : BaseController
         return (await _recipeManager.RemoveReferenceToRecipeAsync(recipeId, referenceId, user)).MapToActionResult();
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route($"{_controllerRoute}/getRecipeDetails")]
-    public async Task<IActionResult> GetRecipeDetails(int recipeId)
+    public async Task<IActionResult> GetRecipeDetails([FromQuery] int recipeId)
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return Unauthorized(_userNotFound);
         return (await _recipeManager.GetRecipeDetailsAsync(recipeId, user)).MapToActionResult();
+    }
+
+    [HttpPost]
+    [Route($"{_controllerRoute}/updateFoodCategories")]
+    public async Task<IActionResult> UpdateCategories([FromQuery] int recipeId, [FromBody] int[] categoryIds)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return Unauthorized(_userNotFound);
+        return (await _recipeManager.UpdateRecipeCategoriesAsync(recipeId, user, categoryIds)).MapToActionResult();
     }
 
 }
