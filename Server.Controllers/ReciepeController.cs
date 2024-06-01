@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Server.ViewModels.Categories;
 using Microsoft.AspNetCore.Authorization;
 using Server.Logic.Abstract.Managers;
 using Server.Logic.Abstract.Token;
 using Server.ViewModels.Recipes;
 using Microsoft.AspNetCore.Http;
+using Server.ViewModels;
 
 namespace Server.Controllers;
 
@@ -173,12 +173,12 @@ public class RecipeController : BaseController
 
     [HttpPost]
     [Route($"{_controllerRoute}/updateDescription")]
-    public async Task<IActionResult> UpdateDescription(int recipeId, [FromBody] string description)
+    public async Task<IActionResult> UpdateDescription(int recipeId, RecipeDescriptionViewModel model)
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return Unauthorized(_userNotFound);
-        return (await _recipeManager.UpdateDescriptionAsync(recipeId, description, user)).MapToActionResult();
+        return (await _recipeManager.UpdateDescriptionAsync(recipeId, model.Description, user)).MapToActionResult();
     }
 
     [HttpPost]
@@ -231,14 +231,24 @@ public class RecipeController : BaseController
         return (await _recipeManager.RemoveReferenceToRecipeAsync(recipeId, referenceId, user)).MapToActionResult();
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route($"{_controllerRoute}/getRecipeDetails")]
-    public async Task<IActionResult> GetRecipeDetails(int recipeId)
+    public async Task<IActionResult> GetRecipeDetails([FromQuery] int recipeId)
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return Unauthorized(_userNotFound);
         return (await _recipeManager.GetRecipeDetailsAsync(recipeId, user)).MapToActionResult();
+    }
+
+    [HttpPost]
+    [Route($"{_controllerRoute}/updateFoodCategories")]
+    public async Task<IActionResult> UpdateCategories([FromQuery] int recipeId, [FromBody] int[] categoryIds)
+    {
+        var user = GetUser(Request.Headers.Authorization);
+        if (user == null)
+            return Unauthorized(_userNotFound);
+        return (await _recipeManager.UpdateRecipeCategoriesAsync(recipeId, user, categoryIds)).MapToActionResult();
     }
 
 }

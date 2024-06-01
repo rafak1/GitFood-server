@@ -242,7 +242,9 @@ internal class RecipeManager : IRecipeManager
 
     public async Task<IManagerActionResult> UpdateRecipeNameAsync(int id, string name, string user)
     {
-        await _dbInfo.Recipes.Where(x => x.Id == id && x.Author == user).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Name, name));
+        var changed = await _dbInfo.Recipes.Where(x => x.Id == id && x.Author == user).ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Name, name));
+        if(changed == 0)
+            return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
         await _dbInfo.SaveChangesAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
@@ -345,6 +347,25 @@ internal class RecipeManager : IRecipeManager
         var likeInfo = await GetNumOfLikesAndIsItLiked(recipeId, user);
         var result = _recipeViewModelFactory.CreateExtendedViewModel(recipe, user, (await GetMainImageAsync(recipeId))?.ImagePath, likeInfo.isLiked, likeInfo.numOfLikes);
         return new ManagerActionResult<RecipeExtendedViewModel>(result, ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult> UpdateRecipeCategoriesAsync(int recipeId, string user, int[] categoryIds)
+        => await new DatabaseExceptionHandler().HandleExceptionsAsync(async () => await UpdateRecipeCategoriesInternalAsync(recipeId, user,categoryIds));
+
+    private async Task<IManagerActionResult> UpdateRecipeCategoriesInternalAsync(int recipeId, string user, int[] categoryIds)
+    {
+        using var trans = await _dbInfo.Database.BeginTransactionAsync();
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
+        if (recipe is null)
+            return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
+
+        var categories = await _dbInfo.FoodCategories.Where(x => categoryIds.Contains(x.Id)).ToArrayAsync();
+        recipe.Categories.Clear();
+        foreach (var category in categories)
+            recipe.Categories.Add(item: category);
+        await _dbInfo.SaveChangesAsync();
+        await trans.CommitAsync();
+        return new ManagerActionResult(ResultEnum.OK);
     }
 
     private async Task<(int numOfLikes, bool isLiked)> GetNumOfLikesAndIsItLiked(int recipeId, string user)
