@@ -131,7 +131,6 @@ internal class RecipeManager : IRecipeManager
         };
         await _dbInfo.RecipesComments.AddAsync(newComment);
         await _dbInfo.SaveChangesAsync();
-
         return new ManagerActionResult(ResultEnum.OK);
     }
 
@@ -199,9 +198,11 @@ internal class RecipeManager : IRecipeManager
 
         var pagedInfo = await _pageingManager.GetPagedInfo(data, page, pageSize).ToArrayAsync();
         var result = new List<RecipeOutViewModel>();
-        foreach(var info in pagedInfo)
-            result.Add(_recipeViewModelFactory.CreateBasicViewModel(info, user, (await GetMainImageAsync(info.Id))?.ImagePath));
-
+        foreach(var info in pagedInfo) 
+        {
+            var likeInfo = await GetNumOfLikesAndIsItLiked(info.Id, user);
+            result.Add(_recipeViewModelFactory.CreateBasicViewModel(info, user, (await GetMainImageAsync(info.Id))?.ImagePath, likeInfo.isLiked, likeInfo.numOfLikes));
+        }
         return new ManagerActionResult<RecipeOutViewModel[]>(result.ToArray(), ResultEnum.OK);
     }
 
@@ -341,8 +342,17 @@ internal class RecipeManager : IRecipeManager
         if (recipe == null)
             return new ManagerActionResult<RecipeExtendedViewModel>(null, ResultEnum.BadRequest, _recipeNotFound);
         
-        var result = _recipeViewModelFactory.CreateExtendedViewModel(recipe, user, (await GetMainImageAsync(recipeId))?.ImagePath);
+        var likeInfo = await GetNumOfLikesAndIsItLiked(recipeId, user);
+        var result = _recipeViewModelFactory.CreateExtendedViewModel(recipe, user, (await GetMainImageAsync(recipeId))?.ImagePath, likeInfo.isLiked, likeInfo.numOfLikes);
         return new ManagerActionResult<RecipeExtendedViewModel>(result, ResultEnum.OK);
+    }
+
+    private async Task<(int numOfLikes, bool isLiked)> GetNumOfLikesAndIsItLiked(int recipeId, string user)
+    {
+        var userEntity = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == user);
+        var isLiked = userEntity is null ? false : await _dbInfo.Recipes.AnyAsync(x => x.Id == recipeId && x.Users.Any(y => y.Login == user));
+        var numOfLikes = await _dbInfo.Recipes.Where(x => x.Id == recipeId).SelectMany(x => x.Users).CountAsync();
+        return (numOfLikes, isLiked);
     }
 
     private async Task<string> SaveMarkdownAsync(int recipeId, string markdown)
