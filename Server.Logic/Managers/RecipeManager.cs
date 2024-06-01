@@ -6,7 +6,6 @@ using System.Text;
 using Server.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using NuGet.Packaging;
 
 namespace Server.Logic.Managers;
 
@@ -362,7 +361,8 @@ internal class RecipeManager : IRecipeManager
 
         var categories = await _dbInfo.FoodCategories.Where(x => categoryIds.Contains(x.Id)).ToArrayAsync();
         recipe.Categories.Clear();
-        recipe.Categories.AddRange(categories);
+        foreach (var category in categories)
+            recipe.Categories.Add(item: category);
         await _dbInfo.SaveChangesAsync();
         await trans.CommitAsync();
         return new ManagerActionResult(ResultEnum.OK);
