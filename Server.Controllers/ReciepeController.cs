@@ -4,6 +4,7 @@ using Server.Logic.Abstract.Managers;
 using Server.Logic.Abstract.Token;
 using Server.ViewModels.Recipes;
 using Microsoft.AspNetCore.Http;
+using Server.ViewModels;
 
 namespace Server.Controllers;
 
@@ -172,12 +173,12 @@ public class RecipeController : BaseController
 
     [HttpPost]
     [Route($"{_controllerRoute}/updateDescription")]
-    public async Task<IActionResult> UpdateDescription(int recipeId, [FromBody] string description)
+    public async Task<IActionResult> UpdateDescription(int recipeId, RecipeDescriptionViewModel model)
     {
         var user = GetUser(Request.Headers.Authorization);
         if (user == null)
             return Unauthorized(_userNotFound);
-        return (await _recipeManager.UpdateDescriptionAsync(recipeId, description, user)).MapToActionResult();
+        return (await _recipeManager.UpdateDescriptionAsync(recipeId, model.Description, user)).MapToActionResult();
     }
 
     [HttpPost]
