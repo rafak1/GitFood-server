@@ -6,7 +6,7 @@ namespace Server.Logic;
 
 public class RecipeViewModelFactory : IRecipeViewModelFactory
 {
-    public RecipeOutViewModel CreateBasicViewModel(Recipe recipe, string user, string titleImagePath)
+    public RecipeOutViewModel CreateBasicViewModel(Recipe recipe, string user, string titleImagePath, bool isLiked, int numOfLikes)
     {
         return new RecipeOutViewModel
         {
@@ -16,13 +16,13 @@ public class RecipeViewModelFactory : IRecipeViewModelFactory
             Author = recipe.Author,
             MarkdownPath = recipe.MarkdownPath,
             Categories = recipe.Categories.Select(x => x.Id).ToList(),
-            NumberOfLikes = recipe.Users.Count,
-            IsLiked = recipe.Users.Any(x => x.Login == user),
+            NumberOfLikes = numOfLikes,
+            IsLiked = isLiked,
             TitleImage = titleImagePath,
         };
     }
 
-    public RecipeExtendedViewModel CreateExtendedViewModel(Recipe recipe, string user, string titleImagePath)
+    public RecipeExtendedViewModel CreateExtendedViewModel(Recipe recipe, string user, string titleImagePath, bool isLiked, int numOfLikes)
     {
         return new RecipeExtendedViewModel
         {
@@ -38,8 +38,8 @@ public class RecipeViewModelFactory : IRecipeViewModelFactory
             }).ToList(),
             Categories = recipe.Categories.Select(x => x.Id).ToList(),
             ImagePaths = recipe.RecipiesImages.Select(x => x.ImagePath).ToList(),
-            NumberOfLikes = recipe.Users.Count,
-            IsLiked = recipe.Users.Any(x => x.Login == user),
+            NumberOfLikes = numOfLikes,
+            IsLiked = isLiked,
             TitleImage = titleImagePath,
         };
     }
