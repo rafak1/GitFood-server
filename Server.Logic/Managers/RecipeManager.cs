@@ -288,6 +288,7 @@ internal class RecipeManager : IRecipeManager
             imagesUri.Add(await AddAndSaveImageAsync(recipe, image));
         }
 
+        await _dbInfo.SaveChangesAsync();
         await transaction.CommitAsync();
         return new ManagerActionResult<string[]>(imagesUri.ToArray(), ResultEnum.OK);
     }
