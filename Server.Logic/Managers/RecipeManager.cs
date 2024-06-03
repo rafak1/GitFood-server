@@ -103,6 +103,7 @@ internal class RecipeManager : IRecipeManager
     {
         var recipe = await _dbInfo.Recipes
             .Include(x => x.RecipiesIngredients)
+	    .ThenInclude(x => x.CategoryNavigation)
             .Include(x => x.RecipiesImages)
             .Include(x => x.Categories)
             .Include(x => x.Users)
@@ -339,6 +340,7 @@ internal class RecipeManager : IRecipeManager
     {
         var recipe = await _dbInfo.Recipes
             .Include(x => x.RecipiesIngredients)
+	    .ThenInclude(x => x.CategoryNavigation)
             .Include(x => x.RecipiesImages)
             .Include(x => x.Categories)
             .FirstOrDefaultAsync(x => x.Id == recipeId);
