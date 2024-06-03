@@ -76,6 +76,7 @@ internal class RecipeManager : IRecipeManager
         {
             await AddIngredientsAsync(newRecipe, recipe);
         }
+	await _dbInfo.SaveChangesAsync();
 
         await transaction.CommitAsync();
 

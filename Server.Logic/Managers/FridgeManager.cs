@@ -151,11 +151,9 @@ internal class FridgeManager : IFridgeManager
             transaction.Rollback();
             return new ManagerActionResult(ResultEnum.NotFound);
         }
-
-        var users = await _dbInfo.Fridges.Where(x => x.Id == fridgeId).SelectMany(x => x.Users).ToArrayAsync();
-
-        foreach (var fridgeUser in users)
-            fridge.Users.Remove(fridgeUser);
+	_dbInfo.Update(fridge);
+	fridge.Users.Clear();
+	//_dbInfo.EndUpdate(fridge);
 
         await _dbInfo.SaveChangesAsync();
         
