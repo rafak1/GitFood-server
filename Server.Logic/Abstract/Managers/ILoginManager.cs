@@ -8,4 +8,5 @@ public interface ILoginManager
     public Task<IManagerActionResult> RegisterAsync(RegisterViewModel login);
     public Task<IManagerActionResult> VerifyAsync(string token, string login);
     public Task<IManagerActionResult> BanAsync(string toBan, string user);
+    public Task<IManagerActionResult> ResendVerificationAsync(string login);
 }

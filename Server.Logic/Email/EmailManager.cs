@@ -4,14 +4,20 @@ using Server.Logic.Abstract.Email;
 using MimeKit;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 namespace Server.Logic.Email;
 
 internal class EmailManager  : IEmailManager{    
     private readonly GitfoodContext _dbInfo;
     private readonly IConfiguration _configuration;
-    private readonly String _email;
-    private readonly String _password;
+    private readonly string _email;
+    private readonly string _password;
+    private readonly string _stmpServer;
+
+    private const string _subject = "Git Food account verification";
+    private const int _sslPort = 465;
+    private const string _verificationMessage = "Hello, {0}! \n Welcome to Git Food! \n Your verification code is: {1}";
 
     public EmailManager(GitfoodContext dbInfo, IConfiguration configuration)
     {
@@ -19,13 +25,11 @@ internal class EmailManager  : IEmailManager{
         _dbInfo = dbInfo ?? throw new ArgumentNullException(nameof(dbInfo));
         _email = _configuration.GetSection("EmailConfig").GetSection("Email").Value;
         _password = _configuration.GetSection("EmailConfig").GetSection("Password").Value;
+        _stmpServer = _configuration.GetSection("EmailConfig").GetSection("StmpServer").Value;
     }
 
-    public bool isBanned(string email)
-    {
-        var user = _dbInfo.Users.FirstOrDefault(e => e.Email == email);
-        return user != null && user.IsBanned;
-    }
+    public async Task<bool> isBannedAsync(string email)
+        => await _dbInfo.Users.Where(e => e.Email == email).AnyAsync(x => x.IsBanned);
 
     public bool isValid(string email)
     {
@@ -33,29 +37,26 @@ internal class EmailManager  : IEmailManager{
         return emailValidator.IsValid(email);
     }
 
-    public bool isVerified(string email)
-    {
-        var user = _dbInfo.Users.FirstOrDefault(e => e.Email == email);
-        return user != null && user.Verification == null;
-    }
+    public async Task<bool> isVerifiedAsync(string email)
+        => await _dbInfo.Users.Where(e => e.Email == email).AnyAsync(x => x.Verification == null);
 
-    public void sendVerificationEmail(string email, string verificationToken, string user)
+
+    public async void sendVerificationEmailAsync(string email, string verificationToken, string user)
     {
         var message = new MimeMessage();
-        message.From.Add(new MailboxAddress(name: "gitfood.fun", address: _email));
+        message.From.Add(new MailboxAddress(name: _email, address: _email));
         message.To.Add(new MailboxAddress(name: "", address: email));
-        message.Subject = "Weryfikacja konta Git Food";
+        message.Subject = _subject;
 
         message.Body = new TextPart("plain")
         {
-            Text = "Witaj " + user + " !\n" +
-                "Cieszymy się, że dołączyłeś do naszej społeczności. Kod weryfikacyjny to: " + verificationToken + "\n"
+            Text = String.Format(_verificationMessage, user, verificationToken)
         };
 
         using var client = new SmtpClient();
-        client.Connect(host: "smtp.gmail.com", port: 465, useSsl: true);
-        client.Authenticate(userName: _email, password: _password);
-        client.Send(message);
-        client.Disconnect(quit: true);
+        await client.ConnectAsync(host: _stmpServer, port: _sslPort, useSsl: true);
+        await client.AuthenticateAsync(userName: _email, password: _password);
+        await client.SendAsync(message);
+        await client.DisconnectAsync(quit: true);
     }
 }

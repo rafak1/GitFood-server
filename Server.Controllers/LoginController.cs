@@ -48,6 +48,11 @@ public class LoginController : BaseController
         => (await _loginManager.VerifyAsync(token, login)).MapToActionResult();
 
     [HttpPost]
+    [Route($"{_controllerRoute}/resendVerification")]
+    public async Task<IActionResult> ResendVerification(string login)
+        => (await _loginManager.ResendVerificationAsync(login)).MapToActionResult();
+
+    [HttpPost]
     [Route($"{_controllerRoute}/ban")]
     public async Task<IActionResult> Ban(string login)
     {
