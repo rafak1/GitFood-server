@@ -6,6 +6,8 @@ using Server.Logic.Abstract.Token;
 using Server.Logic.Token;
 using Microsoft.Extensions.DependencyInjection;
 using Server.Logic.Abstract;
+using Server.Logic.Abstract.Email;
+using Server.Logic.Email;
 
 namespace Server.Logic;
 
@@ -16,7 +18,8 @@ public static class LogicInjectorExtention
         return injector.AddBasicLogic()
             .AddManagers()
             .AddAuthentication()
-            .AddToken();
+            .AddToken()
+            .AddEmail();
     }
 
     private static IServiceCollection AddBasicLogic(this IServiceCollection injector)
@@ -51,5 +54,10 @@ public static class LogicInjectorExtention
     private static IServiceCollection AddToken(this IServiceCollection injector)
     {
         return injector.AddSingleton<ITokenStorage, TokenStorage>();
+    }
+
+    private static IServiceCollection AddEmail(this IServiceCollection injector)
+    {
+        return injector.AddScoped<IEmailManager, EmailManager>();
     }
 }

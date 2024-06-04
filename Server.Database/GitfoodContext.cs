@@ -266,6 +266,9 @@ public partial class GitfoodContext : DbContext
             entity.ToTable("recipes_comments");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Date)
+                .HasColumnType("timestamp(6)")
+                .HasColumnName("added");
             entity.Property(e => e.Likes).HasColumnName("likes");
             entity.Property(e => e.Message)
                 .HasColumnType("character varying")
@@ -274,9 +277,6 @@ public partial class GitfoodContext : DbContext
             entity.Property(e => e.User)
                 .HasColumnType("character varying")
                 .HasColumnName("user");
-            entity.Property(e => e.Date)
-                .HasColumnType("timestamp(6)")
-                .HasColumnName("added");
 
             entity.HasOne(d => d.RecipeNavigation).WithMany(p => p.RecipesComments)
                 .HasForeignKey(d => d.Recipe)
@@ -374,13 +374,23 @@ public partial class GitfoodContext : DbContext
 
             entity.ToTable("users");
 
+            entity.HasIndex(e => e.Email, "users_email_key").IsUnique();
+
             entity.Property(e => e.Login)
                 .HasColumnType("character varying")
                 .HasColumnName("login");
+            entity.Property(e => e.Email)
+                .IsRequired()
+                .HasColumnType("character varying")
+                .HasColumnName("email");
+            entity.Property(e => e.IsBanned).HasColumnName("is_banned");
             entity.Property(e => e.Password)
                 .IsRequired()
                 .HasColumnType("character varying")
                 .HasColumnName("password");
+            entity.Property(e => e.Verification)
+                .HasColumnType("character varying")
+                .HasColumnName("verification");
 
             entity.HasMany(d => d.Follows).WithMany(p => p.Users)
                 .UsingEntity<Dictionary<string, object>>(

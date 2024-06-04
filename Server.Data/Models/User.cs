@@ -9,6 +9,12 @@ public partial class User
 
     public string Password { get; set; }
 
+    public string Email { get; set; }
+
+    public string Verification { get; set; }
+
+    public bool IsBanned { get; set; }
+
     public virtual ICollection<Fridge> Fridges { get; set; } = new List<Fridge>();
 
     public virtual ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();

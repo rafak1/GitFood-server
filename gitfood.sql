@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS public.users
 (
     login character varying NOT NULL,
     password character varying NOT NULL,
+    email character varying NOT NULL UNIQUE,
+    verification character varying,
+    is_banned boolean NOT NULL,
     PRIMARY KEY (login)
 );
 
