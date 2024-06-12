@@ -24,10 +24,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/create")]
     public async Task<IActionResult> CreateRecipe([FromBody] RecipeViewModel recipe)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-
+        var user = GetUser();
         return (await _recipeManager.CreateRecipeAsync(recipe, user)).MapToActionResult();
     }
 
@@ -36,10 +33,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/addOrUpdateMainPhoto")]
     public async Task<IActionResult> AddOrUpdateMainPhoto([FromQuery] int recipeId, [FromForm] IFormFile[] image)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-
+        var user = GetUser();
         using var stream = new MemoryStream();
         var firstImage = image[0];
         await firstImage.CopyToAsync(stream);
@@ -51,10 +45,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/addPhotos")]
     public async Task<IActionResult> AddPhotos([FromQuery] int recipeId, [FromForm] IFormFile[] images)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-
+        var user = GetUser();
         var imageList = new List<RecipeImageViewModel>();
         try{
             foreach(var image in images) 
@@ -80,10 +71,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/delete")]
     public async Task<IActionResult> DeleteRecipe(int id)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-
+        var user = GetUser();
         return (await _recipeManager.DeleteRecipeAsync(id, user)).MapToActionResult();
     }
 
@@ -91,10 +79,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/getById")]
     public async Task<IActionResult> GetRecipeById(int id)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-
+        var user = GetUser();
         return (await _recipeManager.GetRecipeByIdAsync(id, user)).MapToActionResult();
     }
 
@@ -102,10 +87,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/addComment")]
     public async Task<IActionResult> AddComment(int recipeId, string comment)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-
+        var user = GetUser();
         return (await _recipeManager.AddCommentAsync(recipeId, comment, user)).MapToActionResult();
     }
 
@@ -113,10 +95,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/removeComment")]
     public async Task<IActionResult> RemoveComment(int commentId)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-
+        var user = GetUser();
         return (await _recipeManager.RemoveCommentAsync(commentId, user)).MapToActionResult();
     }
 
@@ -124,10 +103,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/like")]
     public async Task<IActionResult> LikeRecipe(int recipeId)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-
+        var user = GetUser();
         return (await _recipeManager.LikeRecipeAsync(recipeId, user)).MapToActionResult();
     }
 
@@ -135,10 +111,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/getCommentsPaged")]
     public async Task<IActionResult> GetCommentsPaged(int recipeId, int page, int pageSize)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-
+        var user = GetUser();
         return (await _recipeManager.GetRecipeCommentsPagedAsync(recipeId, page, pageSize)).MapToActionResult();
     }
 
@@ -146,19 +119,15 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/getPaged")]
     public async Task<IActionResult> GetRecepiesPaged(int page, int pageSize, [FromBody]RecipeSearchViewModel searchParams)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
-        return (await _recipeManager.GetRecipesPagedAsync(page, pageSize, searchParams.SearchName, searchParams.CategoryIds, user)).MapToActionResult();
+        var user = GetUser();
+        return (await _recipeManager.GetRecipesPagedAsync(page, pageSize, searchParams.SearchName, searchParams.IngredientsIds, user)).MapToActionResult();
     }
 
     [HttpPost]
     [Route($"{_controllerRoute}/deleteImages")]
     public async Task<IActionResult> DeleteImages(int recipeId, [FromBody] string[] imageNames)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.DeleteImagesAsync(recipeId, imageNames, user)).MapToActionResult();
     }
 
@@ -166,9 +135,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/updateMarkdown")]
     public async Task<IActionResult> UpdateMarkdown(int recipeId, [FromBody] MarkdownViewModel markdown)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.UpdateMarkdownAsync(recipeId, markdown.Markdown, user)).MapToActionResult();
     }
 
@@ -176,9 +143,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/updateDescription")]
     public async Task<IActionResult> UpdateDescription(int recipeId, RecipeDescriptionViewModel model)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.UpdateDescriptionAsync(recipeId, model.Description, user)).MapToActionResult();
     }
 
@@ -186,9 +151,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/updateIngredient")]
     public async Task<IActionResult> UpdateIngredient(int recipeId, int categoryId, double quantity)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.UpdateIngredientsAsync(recipeId, categoryId, quantity, user)).MapToActionResult();
     }
 
@@ -196,9 +159,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/unlike")]
     public async Task<IActionResult> UnlikeRecipe(int recipeId)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.UnlikeRecipeAsync(recipeId, user)).MapToActionResult();
     }
 
@@ -206,9 +167,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/updateName")]
     public async Task<IActionResult> UpdateName(int recipeId, string name)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.UpdateRecipeNameAsync(recipeId, name, user)).MapToActionResult();
     }
 
@@ -216,9 +175,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/addReference")]
     public async Task<IActionResult> AddReference(int recipeId, int referenceId, double multiplayer)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.AddReferenceToRecipeAsync(recipeId, referenceId, multiplayer, user)).MapToActionResult();
     }
 
@@ -226,9 +183,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/removeReference")]
     public async Task<IActionResult> RemoveReference(int recipeId, int referenceId, double multiplayer)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.RemoveReferenceToRecipeAsync(recipeId, referenceId, user)).MapToActionResult();
     }
 
@@ -236,9 +191,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/getRecipeDetails")]
     public async Task<IActionResult> GetRecipeDetails([FromQuery] int recipeId)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.GetRecipeDetailsAsync(recipeId, user)).MapToActionResult();
     }
 
@@ -246,9 +199,7 @@ public class RecipeController : BaseController
     [Route($"{_controllerRoute}/updateFoodCategories")]
     public async Task<IActionResult> UpdateCategories([FromQuery] int recipeId, [FromBody] int[] categoryIds)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return Unauthorized(_userNotFound);
+        var user = GetUser();
         return (await _recipeManager.UpdateRecipeCategoriesAsync(recipeId, user, categoryIds)).MapToActionResult();
     }
 

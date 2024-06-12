@@ -19,9 +19,6 @@ public class FollowerManager : IFollowerManager
     }
 
     public async Task<IManagerActionResult> AddFollowerAsync(string userToFollow, string user)
-        => await new DatabaseExceptionHandler().HandleExceptionsAsync(async () => await AddFollowerInternalAsync(userToFollow, user));
-
-    private async Task<IManagerActionResult> AddFollowerInternalAsync(string userToFollow, string user)
     {
         var user1 = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == userToFollow);
         var user2 = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == user);

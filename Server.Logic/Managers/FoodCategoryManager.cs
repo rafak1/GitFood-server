@@ -1,6 +1,5 @@
 using Server.Logic.Abstract.Managers;
 using Server.Database;
-using Server.ViewModels.Categories;
 using Server.Logic.Abstract;
 using Server.Data.Models;
 using Microsoft.EntityFrameworkCore;
@@ -20,9 +19,6 @@ internal class FoodCategoryManager : IFoodCategoryManager
     }
 
     public async Task<IManagerActionResult<int>> AddFoodCategoryAsync(string name, string description, string user)
-        => await new DatabaseExceptionHandler<int>().HandleExceptionsAsync(async () => await AddFoodCategoryInternalAsync(name, description, user));
-
-    private async Task<IManagerActionResult<int>> AddFoodCategoryInternalAsync(string name, string description, string user)
     {
         if (Enum.IsDefined(typeof(ElevatedUsers), user))
         {

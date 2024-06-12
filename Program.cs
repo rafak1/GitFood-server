@@ -91,7 +91,8 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/recipe_files" // URL path to access the files
 });
 //app.UseHttpsRedirection();
-
+app.UseMiddleware<SqlErrorHandlingMiddleware>();
+app.UseMiddleware<UserErrorHandlingMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

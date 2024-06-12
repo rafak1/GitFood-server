@@ -1,12 +1,7 @@
 
-using Server.Logic.Abstract;
+namespace Server.Logic.Abstract;
 
-internal interface IDatabaseExceptionHandler<T>
+public interface IDatabaseErrorHanlder
 {
-    Task<IManagerActionResult<T>> HandleExceptionsAsync(Func<Task<IManagerActionResult<T>>> action);
-}
-
-internal interface IDatabaseExceptionHandler
-{
-    Task<IManagerActionResult> HandleExceptionsAsync(Func<Task<IManagerActionResult>> action);
+    string HandleSqlExceptions(Exception ex);
 }

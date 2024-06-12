@@ -5,10 +5,12 @@ using MimeKit;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Humanizer;
 
 namespace Server.Logic.Email;
 
-internal class EmailManager  : IEmailManager{    
+internal class EmailManager  : IEmailManager
+{    
     private readonly GitfoodContext _dbInfo;
     private readonly IConfiguration _configuration;
     private readonly string _email;
@@ -28,20 +30,20 @@ internal class EmailManager  : IEmailManager{
         _stmpServer = _configuration.GetSection("EmailConfig").GetSection("StmpServer").Value;
     }
 
-    public async Task<bool> isBannedAsync(string email)
+    public async Task<bool> IsBannedAsync(string email)
         => await _dbInfo.Users.Where(e => e.Email == email).AnyAsync(x => x.IsBanned);
 
-    public bool isValid(string email)
+    public bool IsValid(string email)
     {
         var emailValidator = new EmailAddressAttribute();
         return emailValidator.IsValid(email);
     }
 
-    public async Task<bool> isVerifiedAsync(string email)
+    public async Task<bool> IsVerifiedAsync(string email)
         => await _dbInfo.Users.Where(e => e.Email == email).AnyAsync(x => x.Verification == null);
 
 
-    public async void sendVerificationEmailAsync(string email, string verificationToken, string user)
+    public async Task SendVerificationEmailAsync(string email, string verificationToken, string user)
     {
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(name: _email, address: _email));
@@ -50,7 +52,7 @@ internal class EmailManager  : IEmailManager{
 
         message.Body = new TextPart("plain")
         {
-            Text = String.Format(_verificationMessage, user, verificationToken)
+            Text = _verificationMessage.FormatWith(user, verificationToken)
         };
 
         using var client = new SmtpClient();

@@ -57,39 +57,36 @@ internal class LoginManager : ILoginManager
             return new ManagerActionResult<string>(token, ResultEnum.OK);
         }
     }
-
-    public async Task<IManagerActionResult> RegisterAsync(RegisterViewModel login) 
-        => await new DatabaseExceptionHandler().HandleExceptionsAsync(async () => await RegisterInternalAsync(login));
-
-    private async Task<IManagerActionResult> RegisterInternalAsync(RegisterViewModel login)
+    
+    public async Task<IManagerActionResult> RegisterAsync(RegisterViewModel login)
     {
         if(!_checker.IsCorrectPassword(login.Password) || !_checker.isCorrectLogin(login.Login))
             return new ManagerActionResult(ResultEnum.BadRequest, _InvalidLoginOrPasswordMessage);
 
-        if(!_emailManager.isValid(login.Email))
+        if(!_emailManager.IsValid(login.Email))
             return new ManagerActionResult(ResultEnum.BadRequest, _InvalidEmailMessage);
 
-        if(await _emailManager.isBannedAsync(login.Email))
+        if(await _emailManager.IsBannedAsync(login.Email))
             return new ManagerActionResult(ResultEnum.BadRequest, _BannedEmailMessage);
 
-        if(await isTaken(login.Login))
+        if(await IsTakenAsync(login.Login))
             return new ManagerActionResult(ResultEnum.BadRequest, _LoginTakenMessage);
 
-        if(await isEmailTaken(login.Email))
+        if(await IsEmailTakenAsync(login.Email))
             return new ManagerActionResult(ResultEnum.BadRequest, _EmailTakenMessage);
 
         var user = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Email == login.Email);
 
         if(user != null && user.Verification != null)
         {
-            _emailManager.sendVerificationEmailAsync(login.Email, user.Verification, user.Login);
+            await _emailManager.SendVerificationEmailAsync(login.Email, user.Verification, user.Login);
             return new ManagerActionResult(ResultEnum.OK, _resendVerificationMessage);
         }
 
 
-        var verificationToken = generateVerificationToken();
+        var verificationToken = GenerateVerificationToken();
 
-        _emailManager.sendVerificationEmailAsync(login.Email, verificationToken, login.Login);
+        await _emailManager.SendVerificationEmailAsync(login.Email, verificationToken, login.Login);
 
         await _dbInfo.Users.AddAsync(new User
         {
@@ -103,9 +100,9 @@ internal class LoginManager : ILoginManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
-    private async Task<bool> isTaken(string login) => await _dbInfo.Users.AnyAsync(x => x.Login == login);
-    private async Task<bool> isEmailTaken(string email) => await _dbInfo.Users.AnyAsync(x => x.Email == email);
-    private string generateVerificationToken()
+    private async Task<bool> IsTakenAsync(string login) => await _dbInfo.Users.AnyAsync(x => x.Login == login);
+    private async Task<bool> IsEmailTakenAsync(string email) => await _dbInfo.Users.AnyAsync(x => x.Email == email);
+    private string GenerateVerificationToken()
     {
         int r = _generator.Next(1, 1000000);
         return r.ToString().PadLeft(6, '0');
@@ -113,7 +110,7 @@ internal class LoginManager : ILoginManager
 
     public async Task<IManagerActionResult> VerifyAsync(string token, string login)
     {
-        var user = _dbInfo.Users.FirstOrDefault(x => x.Login == login && x.Verification == token);
+        var user = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == login && x.Verification == token);
         if(user == null)
             return new ManagerActionResult(ResultEnum.BadRequest, _BadVerificationTokenMessage);
         else
@@ -128,17 +125,15 @@ internal class LoginManager : ILoginManager
     {
         if (Enum.IsDefined(typeof(ElevatedUsers), user))
         {
-            var userToBan = await _dbInfo.Users.Where(x => x.Login == toBan).FirstOrDefaultAsync();
+            var userToBan = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == toBan);
             if (userToBan == null)
                 return new ManagerActionResult(ResultEnum.BadRequest, "User not found");
             userToBan.IsBanned = true;
             await _dbInfo.SaveChangesAsync();
             return new ManagerActionResult(ResultEnum.OK);
         }
-        else
-        {
-            return new ManagerActionResult(ResultEnum.Unauthorizated);
-        }
+        
+        return new ManagerActionResult(ResultEnum.Unauthorizated);
     }
 
     public async Task<IManagerActionResult> ResendVerificationAsync(string login)
@@ -146,12 +141,11 @@ internal class LoginManager : ILoginManager
         var user = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == login);
         if(user == null)
             return new ManagerActionResult(ResultEnum.BadRequest, _InvalidLoginOrPasswordMessage);
-        else if(user.Verification == null)
+        
+        if(user.Verification == null)
             return new ManagerActionResult(ResultEnum.BadRequest, _AlreadyVerifiedMessage);
-        else
-        {
-            _emailManager.sendVerificationEmailAsync(user.Email, user.Verification, user.Login);
-            return new ManagerActionResult(ResultEnum.OK);
-        }
+
+        await _emailManager.SendVerificationEmailAsync(user.Email, user.Verification, user.Login);
+        return new ManagerActionResult(ResultEnum.OK);
     }
 }

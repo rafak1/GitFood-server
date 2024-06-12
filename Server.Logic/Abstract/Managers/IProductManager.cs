@@ -10,4 +10,5 @@ public interface IProductManager
     public Task<IManagerActionResult<ProductWithCategoryViewModel>> GetProductByIdAsync(int id);
     public Task<IManagerActionResult> DeleteProductAsync(int id);
     public Task<IManagerActionResult<ProductWithCategoryViewModel>> SuggestProductAsync(string barcode);
+    public Task<IManagerActionResult<ProductWithCategoryViewModel[]>> GetProductsWithNameLike(string name, int pageSize);
 }

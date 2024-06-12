@@ -20,9 +20,6 @@ public class ShoppingListManager : IShoppingListManager
     }
 
     public async Task<IManagerActionResult<int>> CreateShoppingListAsync(string name, string user)
-        => await new DatabaseExceptionHandler<int>().HandleExceptionsAsync(async () => await CreateShoppingListInternalAsync(name, user));
-        
-    private async Task<IManagerActionResult<int>> CreateShoppingListInternalAsync(string name, string user)
     {
         var transaction = _dbInfo.Database.BeginTransaction();
         await _dbInfo.ShoppingLists.AddAsync(new ShoppingList {

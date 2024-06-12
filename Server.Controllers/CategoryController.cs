@@ -23,10 +23,7 @@ public class CategoryController : BaseController
     [Route($"{_controllerRoute}/addNewRequest")]
     public async Task<IActionResult> AddNewCategoryRequest(CategoryViewModel category)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _categoryManager.AddNewCategoryRequestAsync(category, user)).MapToActionResult();
     }
 
@@ -44,9 +41,7 @@ public class CategoryController : BaseController
     [Route($"{_controllerRoute}/delete")]
     public async Task<IActionResult> DeleteCategory(int id) 
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user != "0")
-            return BadRequest(_userNotFound);
+        var user = GetUser();
         return (await _categoryManager.DeleteCategoryAsync(id)).MapToActionResult();
     }
 

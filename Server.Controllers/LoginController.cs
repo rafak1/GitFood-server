@@ -35,10 +35,8 @@ public class LoginController : BaseController
     [Route($"{_controllerRoute}/signOut")]
     public IActionResult SignOutCall()
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-        RemoveUser(Request.Headers.Authorization);
+        var user = GetUser();
+        RemoveUser();
         return Ok();
     }
 
@@ -56,9 +54,7 @@ public class LoginController : BaseController
     [Route($"{_controllerRoute}/ban")]
     public async Task<IActionResult> Ban(string login)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
+        var user = GetUser();
         return (await _loginManager.BanAsync(login, user)).MapToActionResult();
     }
 }

@@ -22,10 +22,7 @@ public class ShoppingListController : BaseController
     [Route($"{_controllerRoute}/create")]
     public async Task<IActionResult> CreateShoppingList(string name) 
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _shoppingListManager.CreateShoppingListAsync(name, user)).MapToActionResult();
     }
 
@@ -38,10 +35,7 @@ public class ShoppingListController : BaseController
     [Route($"{_controllerRoute}/getAll")]
     public async Task<IActionResult> GetAllShoppingLists() 
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _shoppingListManager.GetAllShoppingListsAsync(user)).MapToActionResult();
     }
 
@@ -60,10 +54,7 @@ public class ShoppingListController : BaseController
     [Route($"{_controllerRoute}/getMap")]
     public async Task<IActionResult> GetShoppingListMap() 
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _shoppingListManager.GetShoppingListMapAsync(user)).MapToActionResult();
     }
 
@@ -71,10 +62,7 @@ public class ShoppingListController : BaseController
     [Route($"{_controllerRoute}/createByRecipe")]
     public async Task<IActionResult> CreateShoppingListByRecipe( int recipeId, int[] fridgesId) 
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _shoppingListManager.CreateShoppingListByRecipeAsync(recipeId, fridgesId, user)).MapToActionResult();
     }
 }

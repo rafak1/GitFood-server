@@ -4,26 +4,23 @@ using Server.ViewModels;
 using Server.Data.Models;
 using Server.Database;
 using Server.ViewModels.Categories;
-using Server.ViewModels.Barcodes;
 using Microsoft.EntityFrameworkCore;
 using Server.Logic.Abstract;
-using NuGet.Packaging;
 
 namespace Server.Logic.Managers;
 
 internal class ProductManager : IProductManager
 {
     private readonly GitfoodContext _dbInfo;
+    private readonly IPageingManager _pageingManager;
 
-    public ProductManager(GitfoodContext database)
+    public ProductManager(GitfoodContext database, IPageingManager pageingManager)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
+        _pageingManager = pageingManager ?? throw new ArgumentNullException(nameof(pageingManager));
     }
 
     public async Task<IManagerActionResult<int>> AddProductAsync(ProductViewModel product, string user) 
-        => await new DatabaseExceptionHandler<int>().HandleExceptionsAsync(async () => await AddProductInternalAsync(product, user));
-        
-    private async Task<IManagerActionResult<int>> AddProductInternalAsync(ProductViewModel product, string user) 
     {
         var transaction = await _dbInfo.Database.BeginTransactionAsync();
         await _dbInfo.Products.AddAsync(new Product{
@@ -89,6 +86,14 @@ internal class ProductManager : IProductManager
             .OrderByDescending(x => x.Count())
             .FirstOrDefault();
         return new ManagerActionResult<ProductWithCategoryViewModel>(GetProductAllInfo(product.FirstOrDefault()), ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult<ProductWithCategoryViewModel[]>> GetProductsWithNameLike(string name, int pageSize)
+    {
+        var products = _dbInfo.Products.Where(x => x.Name.Contains(name));
+        var result = await _pageingManager.GetPagedInfo(products, 1, pageSize).ToArrayAsync();
+        var parsedResult = result.Select(GetProductAllInfo).ToArray();
+        return new ManagerActionResult<ProductWithCategoryViewModel[]>(parsedResult);
     }
 
     private ProductWithCategoryViewModel GetProductAllInfo(Product product) 

@@ -54,9 +54,9 @@ internal class RecipeManager : IRecipeManager
 
         //Categories
 
-        if (recipe.Categories != null)
+        if (recipe.FoodCategories != null)
         {
-            foreach (var category in recipe.Categories)
+            foreach (var category in recipe.FoodCategories)
             {
                 var categoryEntity = await _dbInfo.FoodCategories.FirstOrDefaultAsync(x => x.Id == category);
                 if (categoryEntity == null)
@@ -120,9 +120,6 @@ internal class RecipeManager : IRecipeManager
     }
 
     public async Task<IManagerActionResult> AddCommentAsync(int recipeId, string comment, string user)
-        => await new DatabaseExceptionHandler().HandleExceptionsAsync(async () => await AddCommentInternalAsync(recipeId, comment, user));
-
-    private async Task<IManagerActionResult> AddCommentInternalAsync(int recipeId, string comment, string user)
     {
         var newComment = new RecipesComment
         {
@@ -151,9 +148,6 @@ internal class RecipeManager : IRecipeManager
     }
 
     public async Task<IManagerActionResult> LikeRecipeAsync(int recipeId, string user)
-        => await new DatabaseExceptionHandler().HandleExceptionsAsync(async () => await LikeRecipeInternalAsync(recipeId, user));
-
-    private async Task<IManagerActionResult> LikeRecipeInternalAsync(int recipeId, string user)
     {
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
         if (recipe == null)
@@ -188,14 +182,14 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult<RecipesComment[]>(await _pageingManager.GetPagedInfo(comments, page, pageSize).ToArrayAsync(), ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] categoryIds, string user)
+    public async Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] ingredientsIds, string user)
     {
         IQueryable<Recipe> data = _dbInfo.Recipes.Include(x => x.Categories);
         if(!searchName.IsNullOrEmpty())
             data = data.Where(x => x.Name.Contains(searchName));
-        if(categoryIds is not null && categoryIds.Length > 0) 
+        if(ingredientsIds is not null && ingredientsIds.Length > 0) 
         {
-            data = data.Where(x => x.Categories.Any(x => categoryIds.Contains(x.Id)));
+            data = data.Where(x => x.RecipiesIngredients.Any(x => ingredientsIds.Contains(x.Category)));
         }
 
         var pagedInfo = await _pageingManager.GetPagedInfo(data, page, pageSize).ToArrayAsync();
@@ -354,9 +348,6 @@ internal class RecipeManager : IRecipeManager
     }
 
     public async Task<IManagerActionResult> UpdateRecipeCategoriesAsync(int recipeId, string user, int[] categoryIds)
-        => await new DatabaseExceptionHandler().HandleExceptionsAsync(async () => await UpdateRecipeCategoriesInternalAsync(recipeId, user,categoryIds));
-
-    private async Task<IManagerActionResult> UpdateRecipeCategoriesInternalAsync(int recipeId, string user, int[] categoryIds)
     {
         using var trans = await _dbInfo.Database.BeginTransactionAsync();
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
