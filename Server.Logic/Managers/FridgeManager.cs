@@ -121,9 +121,6 @@ internal class FridgeManager : IFridgeManager
     }
 
     public async Task<IManagerActionResult<int>> CreateFridgeAsync(string name, string login)
-       => await new DatabaseExceptionHandler<int>().HandleExceptionsAsync(async () => await CreateFridgeInternalAsync(name, login));
-
-    private async Task<IManagerActionResult<int>> CreateFridgeInternalAsync(string name, string login)
     {
         var transaction = await _dbInfo.Database.BeginTransactionAsync();
 
@@ -151,11 +148,7 @@ internal class FridgeManager : IFridgeManager
             transaction.Rollback();
             return new ManagerActionResult(ResultEnum.NotFound);
         }
-	_dbInfo.Update(fridge);
-	fridge.Users.Clear();
-	//_dbInfo.EndUpdate(fridge);
-
-        await _dbInfo.SaveChangesAsync();
+        await DeleteAllSharedUsersAsync(fridge);
         
         await _dbInfo.Fridges.Where(x => x.Id == fridgeId).ExecuteDeleteAsync();
         await _dbInfo.SaveChangesAsync();
@@ -288,5 +281,14 @@ internal class FridgeManager : IFridgeManager
             Products = fridgeProductsViewModels,
             SharedWith = fridge.Users.Select(x => x.Login).ToArray()
         };
+    }
+
+    private async Task DeleteAllSharedUsersAsync(Fridge fridge)
+    {
+	    _dbInfo.Update(fridge);
+        fridge.UserLoginNavigation = null;
+	    fridge.Users.Clear();
+        await _dbInfo.Database.ExecuteSqlAsync(sql: $"delete from fridge_shares where fridge_id = {fridge.Id}");
+        await _dbInfo.SaveChangesAsync();
     }
 }

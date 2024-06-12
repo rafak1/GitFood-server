@@ -23,10 +23,7 @@ public class ProductController : BaseController
     [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddProduct(ProductViewModel product)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _productManager.AddProductAsync(product, user)).MapToActionResult();
     }
 
@@ -34,10 +31,7 @@ public class ProductController : BaseController
     [Route($"{_controllerRoute}/update")]
     public async Task<IActionResult> UpdateProduct(ProductViewModel product, int id)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _productManager.UpdateProductAsync(product, user, id)).MapToActionResult();
     }
 
@@ -55,9 +49,7 @@ public class ProductController : BaseController
     [Route($"{_controllerRoute}/getByBarcode")]
     public async Task<IActionResult> GetProductByBarcode(string barcode)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
+        var user = GetUser();
         return (await _productManager.GetProductByBarcodeAsync(barcode, user)).MapToActionResult();
     }
 
@@ -65,5 +57,10 @@ public class ProductController : BaseController
     [Route($"{_controllerRoute}/suggest")]
     public async Task<IActionResult> SuggestProduct(string barcode)
         => (await _productManager.SuggestProductAsync(barcode)).MapToActionResult();
+
+    [HttpGet]
+    [Route($"{_controllerRoute}/getProductsWithNameLike")]
+    public async Task<IActionResult> GetProductsWithNameLike(string name, int pageSize)
+        => (await _productManager.GetProductsWithNameLike(name, pageSize)).MapToActionResult();
 
 }

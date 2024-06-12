@@ -34,8 +34,7 @@ public class RecipeViewModelFactory : IRecipeViewModelFactory
             Ingredients = recipe.RecipiesIngredients.Select(x => new RecipeIngredientViewModel
             {
                 CategoryId = x.Category,
-		CategoryName = x.CategoryNavigation.Name,
-		Unit = x.CategoryNavigation.Unit,
+		        CategoryName = x.CategoryNavigation.Name,
                 Quantity = x.Quantity
             }).ToList(),
             Categories = recipe.Categories.Select(x => x.Id).ToList(),
@@ -58,8 +57,7 @@ public class RecipeViewModelFactory : IRecipeViewModelFactory
             Ingredients = recipe.RecipiesIngredients.Select(x => new RecipeIngredientViewModel
             {
                 CategoryId = x.Category,
-		CategoryName = x.CategoryNavigation.Name,
-		Unit = x.CategoryNavigation.Unit,
+		        CategoryName = x.CategoryNavigation.Name,
                 Quantity = x.Quantity
             }).ToList(),
             Categories = recipe.Categories.Select(x => x.Id).ToList(),

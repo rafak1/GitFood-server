@@ -2,8 +2,8 @@ namespace Server.Logic.Abstract.Email;
 
 public interface IEmailManager
 {
-    bool isValid(string email);
-    Task<bool> isBannedAsync(string email);
-    Task<bool> isVerifiedAsync(string email);
-    void sendVerificationEmailAsync(string email, string verificationToken, string user);
+    bool IsValid(string email);
+    Task<bool> IsBannedAsync(string email);
+    Task<bool> IsVerifiedAsync(string email);
+    Task SendVerificationEmailAsync(string email, string verificationToken, string user);
 }

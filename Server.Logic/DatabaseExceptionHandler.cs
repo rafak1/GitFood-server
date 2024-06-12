@@ -1,37 +1,42 @@
-
 using Microsoft.EntityFrameworkCore;
-using Server.Logic.Abstract;
-using Server.Logic;
 using Npgsql;
+using Server.Logic.Abstract;
 
 namespace Server.Logic;
 
-internal class DatabaseExceptionHandler<T> : DatabaseExceptionHandlerBase, IDatabaseExceptionHandler<T>
+internal class DatabaseExceptionHandler : IDatabaseErrorHanlder
 {
-    public async Task<IManagerActionResult<T>> HandleExceptionsAsync(Func<Task<IManagerActionResult<T>>> action)
-    {
-        try
-        {
-            return await action();
-        }
-        catch (Exception ex)
-        {
-            return new ManagerActionResult<T>(default, ResultEnum.BadRequest, HandleInnerExceptions(ex));
-        }
-    }
-}
+    private const string _entityConcurrentUpdate = "Given element was modified on another workstation";
+    private const string _entityWithSamePropertiesExists = "Element with same properties already exists";
+    private const string _propertieViolation = "Some of data violates the properties checks";
+    private const string _notNullViolation = "Some of required data were not provided";
 
-internal class DatabaseExceptionHandler : DatabaseExceptionHandlerBase, IDatabaseExceptionHandler
-{
-    public async Task<IManagerActionResult> HandleExceptionsAsync(Func<Task<IManagerActionResult>> action)
+    public string HandleSqlExceptions(Exception ex)
     {
-        try
+        if (ex is DbUpdateConcurrencyException)
         {
-            return await action();
+            return _entityConcurrentUpdate;
         }
-        catch (Exception ex)
+        PostgresException postgresException = null;
+        if (ex is PostgresException)
+            postgresException = ex as PostgresException;
+        else if (ex is DbUpdateException dbUpdateEx && dbUpdateEx.InnerException is PostgresException)
+            postgresException = dbUpdateEx.InnerException as PostgresException;
+        else
+            throw ex;
+        var message = postgresException.SqlState switch 
         {
-            return new ManagerActionResult(ResultEnum.BadRequest, HandleInnerExceptions(ex));
-        }
+            PostgresErrorCodes.NullValueNotAllowed => _notNullViolation,
+            PostgresErrorCodes.UniqueViolation => _entityWithSamePropertiesExists,
+            PostgresErrorCodes.CheckViolation or
+                PostgresErrorCodes.RestrictViolation or
+                PostgresErrorCodes.ForeignKeyViolation => _propertieViolation,
+            _ => null
+        };
+        // We want to know for now what it was and only there will be returned Internal error
+        if(message is null)
+            throw ex;
+
+        return message;
     }
 }

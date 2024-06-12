@@ -22,10 +22,7 @@ public class FollowerController : BaseController
     [Route($"{_controllerRoute}/add")]
     public async Task<IActionResult> AddFollower(string userToFollow)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _followerManager.AddFollowerAsync(userToFollow, user)).MapToActionResult();
     }
 
@@ -33,10 +30,7 @@ public class FollowerController : BaseController
     [Route($"{_controllerRoute}/remove")]
     public async Task<IActionResult> RemoveFollower(string userToUnfollow)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _followerManager.RemoveFollowerAsync(userToUnfollow, user)).MapToActionResult();
     }
 
@@ -44,10 +38,7 @@ public class FollowerController : BaseController
     [Route($"{_controllerRoute}/getUserFollowers")]
     public async Task<IActionResult> GetFollowers()
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _followerManager.GetFollowersAsync(user)).MapToActionResult();
     }
 
@@ -55,10 +46,7 @@ public class FollowerController : BaseController
     [Route($"{_controllerRoute}/getFollowing")]
     public async Task<IActionResult> GetFollowing()
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _followerManager.GetFollowingAsync(user)).MapToActionResult();
     }
 

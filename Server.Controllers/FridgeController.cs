@@ -22,10 +22,7 @@ public class FridgeController : BaseController
     [Route($"{_controllerRoute}/create")]
     public async Task<IActionResult> CreateFridge(string name) 
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _fridgeManager.CreateFridgeAsync(name, user)).MapToActionResult();
     }
 
@@ -33,20 +30,14 @@ public class FridgeController : BaseController
     [HttpPatch]
     [Route($"{_controllerRoute}/updateProductQuantity")]
     public async Task<IActionResult> UpdateProductInFridge(int fridgeId, int productId, int quantity){
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _fridgeManager.UpdateProductInFridgeAsync(fridgeId, productId, quantity, user)).MapToActionResult();
     }
 
     [HttpPatch]
     [Route($"{_controllerRoute}/addProducts")]
     public async Task<IActionResult> AddProductsToFridge(FridgeProductsViewModel fridgeProductsViewModel){
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _fridgeManager.AddProductsToFridgeAsync(fridgeProductsViewModel.Products ,fridgeProductsViewModel.FridgeId, user)).MapToActionResult();
     }
 
@@ -54,10 +45,7 @@ public class FridgeController : BaseController
     [Route($"{_controllerRoute}/remove")]
     public async Task<IActionResult> RemoveFridge(int fridgeId) 
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _fridgeManager.DeleteFridgeAsync(fridgeId, user)).MapToActionResult();
     }
 
@@ -66,10 +54,7 @@ public class FridgeController : BaseController
     [Route($"{_controllerRoute}/get")]
     public async Task<IActionResult> GetFridge(int fridgeId)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-        
+        var user = GetUser();
         return (await _fridgeManager.GetFridgeAsync(fridgeId, user)).MapToActionResult();
     }
 
@@ -77,10 +62,7 @@ public class FridgeController : BaseController
     [Route($"{_controllerRoute}/getAll")]
     public async Task<IActionResult> GetAllFridges()
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _fridgeManager.GetAllFridgesAsync(user)).MapToActionResult();
     }
 
@@ -88,10 +70,7 @@ public class FridgeController : BaseController
     [Route($"{_controllerRoute}/getMap")]
     public async Task<IActionResult> GetFridgeMap()
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _fridgeManager.GetMapForUserAsync(user)).MapToActionResult();
     }
 
@@ -99,10 +78,7 @@ public class FridgeController : BaseController
     [Route($"{_controllerRoute}/share")]
     public async Task<IActionResult> ShareFridge(int fridgeId, string userLogin)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _fridgeManager.ShareFridgeAsync(fridgeId, userLogin, user)).MapToActionResult();
     }
 
@@ -110,10 +86,7 @@ public class FridgeController : BaseController
     [Route($"{_controllerRoute}/unshare")]
     public async Task<IActionResult> UnshareFridge(int fridgeId, string userLogin)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _fridgeManager.UnshareFridgeAsync(fridgeId, userLogin, user)).MapToActionResult();
     }
 
@@ -121,10 +94,7 @@ public class FridgeController : BaseController
     [Route($"{_controllerRoute}/beUnshared")]
     public async Task<IActionResult> BeUnshared(int fridgeId)
     {
-        var user = GetUser(Request.Headers.Authorization);
-        if (user == null)
-            return BadRequest(_userNotFound);
-
+        var user = GetUser();
         return (await _fridgeManager.BeUnsharedAsync(fridgeId, user)).MapToActionResult();
     }
 }
