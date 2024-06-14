@@ -162,7 +162,7 @@ internal class RecipeManager : IRecipeManager
 
     public async Task<IManagerActionResult> UnlikeRecipeAsync(int recipeId, string user)
     {
-        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        var recipe = await _dbInfo.Recipes.Include(x => x.Users).FirstOrDefaultAsync(x => x.Id == recipeId);
         if (recipe is null)
             return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
 
