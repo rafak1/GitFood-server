@@ -166,11 +166,7 @@ internal class RecipeManager : IRecipeManager
         if (recipe is null)
             return new ManagerActionResult(ResultEnum.BadRequest, _recipeNotFound);
 
-        var userEntity = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == user);
-        if(userEntity is null)
-            return new ManagerActionResult(ResultEnum.BadRequest, _userDoNotLikeRecipe);
-
-        recipe.Users.Remove(userEntity);
+        recipe.Users.Where(x => x.Login == user).ToList().ForEach(x => recipe.Users.Remove(x));
         await _dbInfo.SaveChangesAsync();
 
         return new ManagerActionResult(ResultEnum.OK);
