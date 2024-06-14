@@ -81,6 +81,9 @@ internal class ProductManager : IProductManager
             .Include(x => x.CategoryNavigation)
             .ToListAsync();
 
+        if(result.Count == 0)
+            return new ManagerActionResult<ProductWithCategoryViewModel>(null, ResultEnum.OK);
+
         var product = result
             .GroupBy(x => x.Category)
             .OrderByDescending(x => x.Count())
