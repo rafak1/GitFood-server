@@ -211,7 +211,7 @@ internal class RecipeManager : IRecipeManager
 
         if(fridgesIngredients.Count > 0) 
         {
-            data = data.Where(x => x.RecipiesIngredients.All(x => fridgesIngredients.ContainsKey(x.Category) && fridgesIngredients[x.Category] >= x.Quantity));
+            data = data.Where(x => x.RecipiesIngredients.All(x => fridgesIngredients[x.Category] >= x.Quantity));
         }
 
 
