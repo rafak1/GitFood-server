@@ -181,7 +181,7 @@ internal class RecipeManager : IRecipeManager
     public async Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(
         int page, int pageSize, string searchName, int[] ingredientsIds, int[] foodCategoriesIds, int[] fridgesIds, string user)
     {
-        IQueryable<Recipe> data = _dbInfo.Recipes.Include(x => x.Categories);
+        IQueryable<Recipe> data = _dbInfo.Recipes.Include(x => x.Categories).Include(x => x.RecipiesIngredients);
         if(!searchName.IsNullOrEmpty())
             data = data.Where(x => x.Name.Contains(searchName));
         if(ingredientsIds is not null && ingredientsIds.Length > 0) 
