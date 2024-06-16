@@ -197,6 +197,7 @@ internal class RecipeManager : IRecipeManager
         {
             var fridgesIngredients = _dbInfo.Fridges
                 .Where(f => fridgesIds.Contains(f.Id) && f.UserLogin == user)
+                .Include(f => f.FridgeProducts)
                 .SelectMany(f => f.FridgeProducts)
                 .GroupBy(fp => fp.Product.Category)
                 .Select(g => new
