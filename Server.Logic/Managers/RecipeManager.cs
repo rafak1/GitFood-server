@@ -193,26 +193,27 @@ internal class RecipeManager : IRecipeManager
             data = data.Where(x => foodCategoriesIds.All(categoryId => x.Categories.Any(x => x.Id == categoryId)));
         }
 
-        Dictionary<int, double> fridgesIngredients = [];
         if(fridgesIds is not null && fridgesIds.Length > 0) 
         {
-            var fridges = await _dbInfo.Fridges.Include(x => x.FridgeProducts).ThenInclude(x => x.Product).Where(x => fridgesIds.Contains(x.Id) && x.UserLogin == user).ToArrayAsync();
-            foreach(var fridge in fridges) 
-            {
-                foreach(var ingredient in fridge.FridgeProducts) 
+            var fridgesIngredients = _dbInfo.Fridges
+                .Where(f => fridgesIds.Contains(f.Id) && f.UserLogin == user)
+                .SelectMany(f => f.FridgeProducts)
+                .GroupBy(fp => fp.Product.Category)
+                .Select(g => new
                 {
-                    if(fridgesIngredients.ContainsKey((int)ingredient.Product.Category))
-                        fridgesIngredients[(int)ingredient.Product.Category] += (double) ingredient.Ammount;
-                    else
-                        fridgesIngredients[(int)ingredient.Product.Category] = (double) ingredient.Ammount;
-                }
-            }
-        }
+                    CategoryId = (int)g.Key,
+                    Quantity = g.Sum(fp => (double)fp.Ammount)
+                })
+                .ToList();
 
-        if(fridgesIngredients.Count > 0) 
-        {
-            var fridgesIngredientsArray = fridgesIngredients.Select(x => new {CategoryId = x.Key, Quantity = x.Value}).ToArray();
-            data = data.Where(x => fridgesIngredientsArray.All(ingredient => x.RecipiesIngredients.Any(y => y.Category == ingredient.CategoryId && (double) y.Quantity <= ingredient.Quantity)));
+
+            data = data.Where(recipe =>
+                fridgesIngredients.All(ingredient =>
+                    recipe.RecipiesIngredients.Any(ri =>
+                        ri.Category == ingredient.CategoryId && ri.Quantity <= ingredient.Quantity
+                    )
+                )
+            );
         }
 
 
