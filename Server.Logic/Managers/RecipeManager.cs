@@ -203,8 +203,7 @@ internal class RecipeManager : IRecipeManager
                 {
                     CategoryId = (int)g.Key,
                     Quantity = g.Sum(fp => (double)fp.Ammount)
-                })
-                .ToList();
+                });
 
 
             data = data.Where(recipe =>
