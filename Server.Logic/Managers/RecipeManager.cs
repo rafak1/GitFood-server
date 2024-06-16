@@ -212,7 +212,7 @@ internal class RecipeManager : IRecipeManager
         if(fridgesIngredients.Count > 0) 
         {
             var fridgesIngredientsArray = fridgesIngredients.Select(x => new {CategoryId = x.Key, Quantity = x.Value}).ToArray();
-            data = data.Where(x => fridgesIngredientsArray.All(ingredient => x.RecipiesIngredients.Any(x => x.Category == ingredient.CategoryId && x.Quantity <= ingredient.Quantity)));
+            data = data.Where(x => fridgesIngredientsArray.All(ingredient => x.RecipiesIngredients.Any(x => x.Category == ingredient.CategoryId && (double) x.Quantity <= ingredient.Quantity)));
         }
 
 
