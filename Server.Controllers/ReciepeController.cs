@@ -120,7 +120,8 @@ public class RecipeController : BaseController
     public async Task<IActionResult> GetRecepiesPaged(int page, int pageSize, [FromBody]RecipeSearchViewModel searchParams)
     {
         var user = GetUser();
-        return (await _recipeManager.GetRecipesPagedAsync(page, pageSize, searchParams.SearchName, searchParams.IngredientsIds, user)).MapToActionResult();
+        return (await _recipeManager.GetRecipesPagedAsync(
+            page, pageSize, searchParams.SearchName, searchParams.IngredientsIds, searchParams.FoodCategoriesIds, searchParams.FridgeIds, user)).MapToActionResult();
     }
 
     [HttpPost]

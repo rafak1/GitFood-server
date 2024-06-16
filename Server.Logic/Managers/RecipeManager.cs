@@ -178,15 +178,42 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult<RecipesComment[]>(await _pageingManager.GetPagedInfo(comments, page, pageSize).ToArrayAsync(), ResultEnum.OK);
     }
 
-    public async Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] ingredientsIds, string user)
+    public async Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(
+        int page, int pageSize, string searchName, int[] ingredientsIds, int[] foodCategoriesIds, int[] fridgesIds, string user)
     {
         IQueryable<Recipe> data = _dbInfo.Recipes.Include(x => x.Categories);
         if(!searchName.IsNullOrEmpty())
             data = data.Where(x => x.Name.Contains(searchName));
         if(ingredientsIds is not null && ingredientsIds.Length > 0) 
         {
-            data = data.Where(x => x.RecipiesIngredients.Any(x => ingredientsIds.Contains(x.Category)));
+            data = data.Where(x => ingredientsIds.All(ingredientId => x.RecipiesIngredients.Any(x => x.Category == ingredientId)));
         }
+        if(foodCategoriesIds is not null && foodCategoriesIds.Length > 0) 
+        {
+            data = data.Where(x => foodCategoriesIds.All(categoryId => x.Categories.Any(x => x.Id == categoryId)));
+        }
+
+        Dictionary<int, double> fridgesIngredients = [];
+        if(fridgesIds is not null && fridgesIds.Length > 0) 
+        {
+            var fridges = await _dbInfo.Fridges.Include(x => x.FridgeProducts).ThenInclude(x => x.Product).Where(x => fridgesIds.Contains(x.Id) && x.UserLogin == user).ToArrayAsync();
+            foreach(var fridge in fridges) 
+            {
+                foreach(var ingredient in fridge.FridgeProducts) 
+                {
+                    if(fridgesIngredients.ContainsKey((int)ingredient.Product.Category))
+                        fridgesIngredients[(int)ingredient.Product.Category] += (double) ingredient.Ammount;
+                    else
+                        fridgesIngredients[(int)ingredient.Product.Category] = (double) ingredient.Ammount;
+                }
+            }
+        }
+
+        if(fridgesIngredients.Count > 0) 
+        {
+            data = data.Where(x => x.RecipiesIngredients.All(x => fridgesIngredients.ContainsKey(x.Category) && fridgesIngredients[x.Category] >= x.Quantity));
+        }
+
 
         var pagedInfo = await _pageingManager.GetPagedInfo(data, page, pageSize).ToArrayAsync();
         var result = new List<RecipeOutViewModel>();

@@ -14,7 +14,8 @@ public interface IRecipeManager
     public Task<IManagerActionResult> LikeRecipeAsync(int recipeId, string user);
     public Task<IManagerActionResult> UnlikeRecipeAsync(int recipeId, string user);
     public Task<IManagerActionResult> UpdateMarkdownAsync(int recipeId, string markdown, string user);
-    public Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(int page, int pageSize, string searchName, int[] ingredientsIds, string user);
+    public Task<IManagerActionResult<RecipeOutViewModel[]>> GetRecipesPagedAsync(
+        int page, int pageSize, string searchName, int[] ingredientsIds, int[] foodCategoriesIds, int[] fridgesIds, string user);
     public Task<IManagerActionResult> DeleteImagesAsync(int recipeId, string[] imageNames, string user);
     public Task<IManagerActionResult> UpdateIngredientsAsync(int recipeId, int categoryId, double quantity, string user);
     public Task<IManagerActionResult> AddReferenceToRecipeAsync(int id, int referenceId, double multiplayer, string user);
