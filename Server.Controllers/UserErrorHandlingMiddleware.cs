@@ -23,7 +23,7 @@ public class UserErrorHandlingMiddleware
         catch (UserNotFoundException)
         {                                                                           
             context.Response.ContentType = "application/json";                                                                                         
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             await context.Response.WriteAsync(JsonConvert.SerializeObject(_userNotFound));
         }
     }
