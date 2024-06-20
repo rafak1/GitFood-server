@@ -158,10 +158,13 @@ public class RecipeController : BaseController
 
     [HttpPost]
     [Route($"{_controllerRoute}/replaceIngredients")]
-    public async Task<IActionResult> ReplaceIngredients(int recipeId, [FromBody] (int categoryId, double quantity)[] ingredients)
+    public async Task<IActionResult> ReplaceIngredients(int recipeId, [FromBody] UpdateIngredientViewModel[] ingredients)
     {
         var user = GetUser();
-        return (await _recipeManager.ReplaceIngredientsAsync(recipeId, user, ingredients)).MapToActionResult();
+
+        var tuples = ingredients.Select(x => (x.categoryId, x.quantity)).ToArray();
+
+        return (await _recipeManager.ReplaceIngredientsAsync(recipeId, user, tuples)).MapToActionResult();
     }
 
     [HttpPost]
