@@ -449,7 +449,7 @@ internal class RecipeManager : IRecipeManager
         
         foreach(var image in oryginalRecipe.RecipiesImages)
         {
-            if(image.ImagePath.Contains(_pathProvider.GetMainImagePathPrefix(newRecipe.Id)))
+            if(image.ImagePath.Contains(_pathProvider.GetMainImagePathPrefix(oryginalRecipe.Id)))
                 continue;
             
             var path = _pathProvider.GetImagePath(newRecipe.Id, image.Name);
@@ -463,9 +463,24 @@ internal class RecipeManager : IRecipeManager
             });
         }
         foreach(var ingredient in oryginalRecipe.RecipiesIngredients)
-            newRecipe.RecipiesIngredients.Add(ingredient);
-        foreach(var category in oryginalRecipe.Categories)
-            newRecipe.Categories.Add(category);
+        {
+
+            newRecipe.RecipiesIngredients.Add(new RecipiesIngredient()
+            {
+                Reciepie = newRecipe.Id,
+                Quantity = ingredient.Quantity,
+                Category = ingredient.Category
+            });
+        }
+        foreach(var category in oryginalRecipe.Categories) 
+        {
+            newRecipe.Categories.Add(new FoodCategory()
+            {
+                Id = category.Id,
+                Name = category.Name,
+                Description = category.Description,
+            });
+        }
 
         await _dbInfo.SaveChangesAsync();
         await transaction.CommitAsync();
