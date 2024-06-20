@@ -208,9 +208,9 @@ internal class RecipeManager : IRecipeManager
 
 
             data = data.Where(recipe =>
-                fridgesIngredients.All(ingredient =>
-                    recipe.RecipiesIngredients.Any(ri =>
-                        ri.Category == ingredient.CategoryId && ri.Quantity <= ingredient.Quantity
+                recipe.RecipiesIngredients.All(ingredient =>
+                    fridgesIngredients.Any(ri =>
+                        ri.CategoryId == ingredient.Category && ri.Quantity >= ingredient.Quantity
                     )
                 )
             );
