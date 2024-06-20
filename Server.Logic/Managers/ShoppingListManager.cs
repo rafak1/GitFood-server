@@ -127,7 +127,7 @@ public class ShoppingListManager : IShoppingListManager
                 .Include(x => x.Product)
                 .ThenInclude(x => x.CategoryNavigation)
                 .Where(x => x.FridgeId == fridge.Id)
-                .Select(x => new { x.Product.Category, x.Ammount });
+                .Select(x => new {x.Product.Category, x.Ammount});
                 
             foreach (var fridgeProduct in fridgeProducts)
             {
@@ -140,16 +140,10 @@ public class ShoppingListManager : IShoppingListManager
             }
         }
 
-        var transaction = _dbInfo.Database.BeginTransaction();
-
         var shoppingList = new ShoppingList {
             Name = recipe.Name,
             User = user
         };
-        
-        await _dbInfo.ShoppingLists.AddAsync(shoppingList);
-        await _dbInfo.SaveChangesAsync();
-        var id = (await _dbInfo.ShoppingLists.Where(x => x.User == user && x.Name == recipe.Name).FirstAsync()).Id;
 
         foreach (var shoppingListProduct in shoppingListProducts)
         {
@@ -158,9 +152,10 @@ public class ShoppingListManager : IShoppingListManager
                 Quantity = shoppingListProduct.Quantity
             });
         }
-
+        
+        var res = await _dbInfo.ShoppingLists.AddAsync(shoppingList);
         await _dbInfo.SaveChangesAsync();
-        await transaction.CommitAsync();
-        return new ManagerActionResult<int>(id, ResultEnum.OK);
+
+        return new ManagerActionResult<int>(res.Entity.Id , ResultEnum.OK);
     }
 }
