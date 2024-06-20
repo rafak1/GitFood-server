@@ -6,6 +6,8 @@ using Server.Logic.Abstract.Token;
 using Server.Logic.Token;
 using Microsoft.Extensions.DependencyInjection;
 using Server.Logic.Abstract;
+using Server.Logic.Abstract.Email;
+using Server.Logic.Email;
 
 namespace Server.Logic;
 
@@ -16,21 +18,32 @@ public static class LogicInjectorExtention
         return injector.AddBasicLogic()
             .AddManagers()
             .AddAuthentication()
-            .AddToken();
+            .AddToken()
+            .AddEmail();
     }
 
     private static IServiceCollection AddBasicLogic(this IServiceCollection injector)
     {
-        return injector.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        return injector.AddSingleton<IDateTimeProvider, DateTimeProvider>()
+            .AddSingleton<IPathProvider, PathProvider>()
+            .AddSingleton<IFileSaver, FileSaver>()
+            .AddSingleton<IRecipeViewModelFactory, RecipeViewModelFactory>()
+            .AddSingleton<IDatabaseErrorHanlder, DatabaseExceptionHandler>()
+            .AddSingleton<IFileProvider, FileProvider>();
     }
 
     private static IServiceCollection AddManagers(this IServiceCollection injector)
     {
-        return injector.AddScoped<IBarcodeManager, BarcodeManager>()
-            .AddScoped<IProductManager, ProductManager>()
+        return injector.AddScoped<IProductManager, ProductManager>()
             .AddScoped<ICategoryManager, CategoryManager>()
             .AddScoped<IFridgeManager, FridgeManager>()
-            .AddScoped<ILoginManager, LoginManager>();
+            .AddScoped<ILoginManager, LoginManager>()
+            .AddScoped<IRecipeManager, RecipeManager>()
+            .AddScoped<IFollowerManager, FollowerManager>()
+            .AddScoped<IFoodCategoryManager, FoodCategoryManager>()
+            .AddScoped<IPageingManager, PageingManager>()
+            .AddScoped<IShoppingListManager, ShoppingListManager>();
+
     }
 
     private static IServiceCollection AddAuthentication(this IServiceCollection injector)
@@ -43,5 +56,10 @@ public static class LogicInjectorExtention
     private static IServiceCollection AddToken(this IServiceCollection injector)
     {
         return injector.AddSingleton<ITokenStorage, TokenStorage>();
+    }
+
+    private static IServiceCollection AddEmail(this IServiceCollection injector)
+    {
+        return injector.AddScoped<IEmailManager, EmailManager>();
     }
 }

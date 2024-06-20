@@ -3,36 +3,12 @@
 BEGIN;
 
 
-CREATE TABLE IF NOT EXISTS public.barcodes
-(
-    key character varying COLLATE pg_catalog."default" NOT NULL,
-    product_id integer,
-    "user" character varying,
-    CONSTRAINT "Barcode_pkey" PRIMARY KEY (key, "user")
-);
-
-ALTER TABLE IF EXISTS public.barcodes
-    ENABLE ROW LEVEL SECURITY;
-
-CREATE TABLE IF NOT EXISTS public.products
-(
-    id serial NOT NULL,
-    description character varying COLLATE pg_catalog."default",
-    name character varying COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT "Products_pkey" PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS public.products_categories
-(
-    product_id integer NOT NULL,
-    category_id integer NOT NULL,
-    PRIMARY KEY (product_id, category_id)
-);
-
 CREATE TABLE IF NOT EXISTS public.categories
 (
     id serial NOT NULL,
     name character varying NOT NULL,
+    status character varying NOT NULL,
+    unit character varying,
     PRIMARY KEY (id)
 );
 
@@ -40,65 +16,144 @@ CREATE TABLE IF NOT EXISTS public.users
 (
     login character varying NOT NULL,
     password character varying NOT NULL,
+    email character varying NOT NULL UNIQUE,
+    verification character varying,
+    is_banned boolean NOT NULL,
     PRIMARY KEY (login)
 );
 
 CREATE TABLE IF NOT EXISTS public.fridge
 (
-    product_id integer NOT NULL,
     user_login character varying NOT NULL,
     id serial NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE (product_id, user_login)
+    name character varying NOT NULL,
+    PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS public.fridge_units
+CREATE TABLE IF NOT EXISTS public.fridge_products
 (
-    fridge_product_id integer NOT NULL,
-    quantity double precision NOT NULL,
-    unit character varying NOT NULL,
-    PRIMARY KEY (fridge_product_id, unit)
+    product_id integer NOT NULL,
+    fridge_id integer NOT NULL,
+    ammount double precision,
+    PRIMARY KEY (product_id, fridge_id)
 );
 
-ALTER TABLE IF EXISTS public.barcodes
-    ADD CONSTRAINT "Barcode_ProductId_fkey" FOREIGN KEY (product_id)
-    REFERENCES public.products (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
+CREATE TABLE IF NOT EXISTS public.products
+(
+    name character varying,
+    description character varying,
+    barcode character varying,
+    "user" character varying,
+    id serial,
+    category integer,
+    quantity double precision,
+    PRIMARY KEY (id)
+);
 
+CREATE TABLE IF NOT EXISTS public.recipes
+(
+    id serial,
+    name character varying NOT NULL,
+    description character varying,
+    author character varying NOT NULL,
+    markdown_path character varying,
+    PRIMARY KEY (id)
+);
 
-ALTER TABLE IF EXISTS public.barcodes
-    ADD FOREIGN KEY ("user")
-    REFERENCES public.users (login) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
+CREATE TABLE IF NOT EXISTS public.recipies_ingredients
+(
+    reciepie integer NOT NULL,
+    quantity double precision,
+    category integer,
+    PRIMARY KEY (reciepie, category)
+);
 
+CREATE TABLE IF NOT EXISTS public.reciepes_categories
+(
+    reciepe integer,
+    category integer,
+    PRIMARY KEY (reciepe, category)
+);
 
-ALTER TABLE IF EXISTS public.products_categories
-    ADD FOREIGN KEY (product_id)
-    REFERENCES public.products (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
+CREATE TABLE IF NOT EXISTS public.food_categories
+(
+    id serial,
+    name character varying,
+    description character varying,
+    PRIMARY KEY (id)
+);
 
+CREATE TABLE IF NOT EXISTS public.shopping_list
+(
+    id serial,
+    "user" character varying,
+    name character varying,
+    PRIMARY KEY (id)
+);
 
-ALTER TABLE IF EXISTS public.products_categories
-    ADD FOREIGN KEY (category_id)
-    REFERENCES public.categories (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
+CREATE TABLE IF NOT EXISTS public.shopping_list_products
+(
+    shopping_list_id integer,
+    category integer,
+    quantity double precision,
+    PRIMARY KEY (shopping_list_id, category)
+);
 
+CREATE TABLE IF NOT EXISTS public.add_categories_request
+(
+    "user" character varying,
+    request integer,
+    datetime date,
+    id serial,
+    PRIMARY KEY (id)
+);
 
-ALTER TABLE IF EXISTS public.fridge
-    ADD FOREIGN KEY (product_id)
-    REFERENCES public.products (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
+CREATE TABLE IF NOT EXISTS public.recipies_images
+(
+    name character varying,
+    image_path character varying,
+    recipe integer,
+    PRIMARY KEY (name, recipe)
+);
 
+CREATE TABLE IF NOT EXISTS public.recipe_children
+(
+    recipe integer,
+    child integer,
+    multiplier double precision
+);
+
+CREATE TABLE IF NOT EXISTS public.recipes_likes
+(
+    "user" character varying,
+    recipe integer,
+    PRIMARY KEY ("user", recipe)
+);
+
+CREATE TABLE IF NOT EXISTS public.recipes_comments
+(
+    "user" character varying,
+    recipe integer,
+    id serial,
+    message character varying,
+    likes integer,
+    added timestamp,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.users_follows
+(
+    "user" character varying,
+    follows character varying,
+    PRIMARY KEY ("user", follows)
+);
+
+CREATE TABLE IF NOT EXISTS public.fridge_shares
+(
+    fridge_id integer,
+    "user" character varying,
+    PRIMARY KEY (fridge_id, "user")
+);
 
 ALTER TABLE IF EXISTS public.fridge
     ADD FOREIGN KEY (user_login)
@@ -108,9 +163,169 @@ ALTER TABLE IF EXISTS public.fridge
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public.fridge_units
-    ADD FOREIGN KEY (fridge_product_id)
+ALTER TABLE IF EXISTS public.fridge_products
+    ADD FOREIGN KEY (product_id)
+    REFERENCES public.products (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.fridge_products
+    ADD FOREIGN KEY (fridge_id)
     REFERENCES public.fridge (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.products
+    ADD FOREIGN KEY (category)
+    REFERENCES public.categories (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.recipes
+    ADD FOREIGN KEY (author)
+    REFERENCES public.users (login) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.recipies_ingredients
+    ADD FOREIGN KEY (reciepie)
+    REFERENCES public.recipes (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.recipies_ingredients
+    ADD FOREIGN KEY (category)
+    REFERENCES public.categories (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.reciepes_categories
+    ADD FOREIGN KEY (reciepe)
+    REFERENCES public.recipes (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.reciepes_categories
+    ADD FOREIGN KEY (category)
+    REFERENCES public.food_categories (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.shopping_list
+    ADD FOREIGN KEY ("user")
+    REFERENCES public.users (login) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.shopping_list_products
+    ADD FOREIGN KEY (category)
+    REFERENCES public.categories (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.shopping_list_products
+    ADD FOREIGN KEY (shopping_list_id)
+    REFERENCES public.shopping_list (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.add_categories_request
+    ADD FOREIGN KEY (request)
+    REFERENCES public.categories (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.recipies_images
+    ADD FOREIGN KEY (recipe)
+    REFERENCES public.recipes (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.recipes_likes
+    ADD FOREIGN KEY ("user")
+    REFERENCES public.users (login) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.recipes_likes
+    ADD FOREIGN KEY (recipe)
+    REFERENCES public.recipes (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.recipes_comments
+    ADD FOREIGN KEY ("user")
+    REFERENCES public.users (login) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.recipes_comments
+    ADD FOREIGN KEY (recipe)
+    REFERENCES public.recipes (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.users_follows
+    ADD FOREIGN KEY ("user")
+    REFERENCES public.users (login) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.users_follows
+    ADD FOREIGN KEY (follows)
+    REFERENCES public.users (login) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.fridge_shares
+    ADD FOREIGN KEY (fridge_id)
+    REFERENCES public.fridge (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.fridge_shares
+    ADD FOREIGN KEY ("user")
+    REFERENCES public.users (login) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;

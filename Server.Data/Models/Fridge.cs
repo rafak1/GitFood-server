@@ -1,16 +1,17 @@
-﻿namespace Server.Data.Models;
+﻿
+namespace Server.Data.Models;
 
 public partial class Fridge
 {
-    public int ProductId { get; set; }
-
     public string UserLogin { get; set; }
 
     public int Id { get; set; }
 
-    public virtual ICollection<FridgeUnit> FridgeUnits { get; set; } = new List<FridgeUnit>();
+    public string Name { get; set; }
 
-    public virtual Product Product { get; set; }
+    public virtual ICollection<FridgeProduct> FridgeProducts { get; set; } = new List<FridgeProduct>();
 
     public virtual User UserLoginNavigation { get; set; }
+
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

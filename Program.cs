@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.FileProviders;
+using System;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +24,7 @@ var jwtKey = builder.Configuration.GetSection("Jwt:Key").Get<string>();
 
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 {
-    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
 }));
 
 
@@ -78,9 +81,18 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("corsapp");
 
+string workingDirectory = Environment.CurrentDirectory;
+string projectDirectory = Directory.GetParent(workingDirectory).Parent.Parent.FullName;
 
+app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(workingDirectory + "/recipe_files"),
+    RequestPath = "/recipe_files" // URL path to access the files
+});
 //app.UseHttpsRedirection();
-
+app.UseMiddleware<SqlErrorHandlingMiddleware>();
+app.UseMiddleware<UserErrorHandlingMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
