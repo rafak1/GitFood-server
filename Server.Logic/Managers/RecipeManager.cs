@@ -297,6 +297,27 @@ internal class RecipeManager : IRecipeManager
         return new ManagerActionResult(ResultEnum.OK);
     }
 
+    public async Task<IManagerActionResult> ReplaceIngredientsAsync(int recipeId, string user, (int categoryId, double quantity)[] ingredients)
+    {
+        using var transaction = await _dbInfo.Database.BeginTransactionAsync();
+        var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);
+        if(recipe is null)
+            return new ManagerActionResult(ResultEnum.BadRequest);
+        var oldIngredients = await _dbInfo.RecipiesIngredients.Where(x => x.Reciepie == recipeId).ToArrayAsync();
+        foreach(var ingredient in oldIngredients)
+            _dbInfo.RecipiesIngredients.Remove(ingredient);
+        foreach(var ingredient in ingredients)
+            await _dbInfo.RecipiesIngredients.AddAsync(new RecipiesIngredient
+            {
+                Reciepie = recipeId,
+                Category = ingredient.categoryId,
+                Quantity = ingredient.quantity
+            });
+        await _dbInfo.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return new ManagerActionResult(ResultEnum.OK);
+    }
+
     public async Task<IManagerActionResult<string[]>> AddImagesAsync(int recipeId, RecipeImageViewModel[] images, string user)
     {
         var recipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId && x.Author == user);

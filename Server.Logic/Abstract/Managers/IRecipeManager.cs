@@ -18,6 +18,7 @@ public interface IRecipeManager
         int page, int pageSize, string searchName, int[] ingredientsIds, int[] foodCategoriesIds, int[] fridgesIds, string user);
     public Task<IManagerActionResult> DeleteImagesAsync(int recipeId, string[] imageNames, string user);
     public Task<IManagerActionResult> UpdateIngredientsAsync(int recipeId, int categoryId, double quantity, string user);
+    public Task<IManagerActionResult> ReplaceIngredientsAsync(int recipeId, string user, (int categoryId, double quantity)[] ingredients);
     public Task<IManagerActionResult> AddReferenceToRecipeAsync(int id, int referenceId, double multiplayer, string user);
     public Task<IManagerActionResult> RemoveReferenceToRecipeAsync(int id, int referenceId, string user);
     public Task<IManagerActionResult> UpdateDescriptionAsync(int id, string description, string user);

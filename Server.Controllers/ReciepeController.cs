@@ -157,6 +157,14 @@ public class RecipeController : BaseController
     }
 
     [HttpPost]
+    [Route($"{_controllerRoute}/replaceIngredients")]
+    public async Task<IActionResult> ReplaceIngredients(int recipeId, [FromBody] (int categoryId, double quantity)[] ingredients)
+    {
+        var user = GetUser();
+        return (await _recipeManager.ReplaceIngredientsAsync(recipeId, user, ingredients)).MapToActionResult();
+    }
+
+    [HttpPost]
     [Route($"{_controllerRoute}/unlike")]
     public async Task<IActionResult> UnlikeRecipe(int recipeId)
     {
