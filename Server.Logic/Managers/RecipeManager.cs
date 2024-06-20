@@ -414,7 +414,10 @@ internal class RecipeManager : IRecipeManager
 
     public async Task<IManagerActionResult<int>> ForkRecipeAsync(int recipeId, string user)
     {
-        var oryginalRecipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        var oryginalRecipe = await _dbInfo.Recipes
+            .Include(x => x.Categories)
+            .Include(x => x.RecipiesIngredients)
+            .Include(x => x.RecipiesImages).FirstOrDefaultAsync(x => x.Id == recipeId);
         if (oryginalRecipe is null)
             return new ManagerActionResult<int>(-1, ResultEnum.BadRequest, _recipeNotFound);
         var newRecipe = new Recipe()
@@ -465,7 +468,7 @@ internal class RecipeManager : IRecipeManager
         foreach(var ingredient in oryginalRecipe.RecipiesIngredients)
         {
 
-            newRecipe.RecipiesIngredients.Add(new RecipiesIngredient()
+            await _dbInfo.RecipiesIngredients.AddAsync(new RecipiesIngredient()
             {
                 Reciepie = newRecipe.Id,
                 Quantity = ingredient.Quantity,
@@ -473,14 +476,7 @@ internal class RecipeManager : IRecipeManager
             });
         }
         foreach(var category in oryginalRecipe.Categories) 
-        {
-            newRecipe.Categories.Add(new FoodCategory()
-            {
-                Id = category.Id,
-                Name = category.Name,
-                Description = category.Description,
-            });
-        }
+            newRecipe.Categories.Add(category);
 
         await _dbInfo.SaveChangesAsync();
         await transaction.CommitAsync();
