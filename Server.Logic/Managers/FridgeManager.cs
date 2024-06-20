@@ -209,10 +209,10 @@ internal class FridgeManager : IFridgeManager
 
     public async Task<IManagerActionResult> ShareFridgeAsync(int fridgeId, string userLogin, string login)
     {
-        var fridge = await _dbInfo.Fridges.
-            Include(x => x.Users).
-            Include(x => x.UserLoginNavigation).
-            FirstOrDefaultAsync(x => x.Id == fridgeId && x.UserLoginNavigation.Login == login);
+        var fridge = await _dbInfo.Fridges
+            .Include(x => x.Users)
+            .Include(x => x.UserLoginNavigation)
+            .FirstOrDefaultAsync(x => x.Id == fridgeId && x.UserLoginNavigation.Login == login);
 
         if (fridge is null)
             return new ManagerActionResult(ResultEnum.NotFound);
@@ -221,7 +221,11 @@ internal class FridgeManager : IFridgeManager
             return new ManagerActionResult(ResultEnum.BadRequest);
         else 
         {
-            fridge.Users.Add(await _dbInfo.Users.FirstAsync(x => x.Login == userLogin));
+            var user = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == userLogin);
+            if (user is null)
+                return new ManagerActionResult(ResultEnum.NotFound);
+
+            fridge.Users.Add(user);
             await _dbInfo.SaveChangesAsync();
             return new ManagerActionResult(ResultEnum.OK);
         }
@@ -237,7 +241,11 @@ internal class FridgeManager : IFridgeManager
         if (fridge is null)
             return new ManagerActionResult(ResultEnum.NotFound);
 
-        fridge.Users.Remove(await _dbInfo.Users.FirstAsync(x => x.Login == userLogin));
+        var user = await _dbInfo.Users.FirstOrDefaultAsync(x => x.Login == userLogin);
+        if (user is null)
+            return new ManagerActionResult(ResultEnum.NotFound);
+
+        fridge.Users.Remove(user);
         await _dbInfo.SaveChangesAsync();
         return new ManagerActionResult(ResultEnum.OK);
     }
