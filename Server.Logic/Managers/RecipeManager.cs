@@ -421,8 +421,7 @@ internal class RecipeManager : IRecipeManager
         {
             Name = oryginalRecipe.Name,
             Description = oryginalRecipe.Description,
-            Author = user,
-            RecipiesIngredients = oryginalRecipe.RecipiesIngredients
+            Author = user
         };
         using var transaction = await _dbInfo.Database.BeginTransactionAsync();
         await _dbInfo.Recipes.AddAsync(newRecipe);
@@ -438,7 +437,7 @@ internal class RecipeManager : IRecipeManager
         {
         
             var path = _pathProvider.GetMainImagePath(newRecipe.Id, mainImage.Name);
-            var imageBytes = _fileProvider.GetFileByPath(path);
+            var imageBytes = _fileProvider.GetFileByPath(mainImage.ImagePath);
             await _fileSaver.SaveFileAsync(path , imageBytes);
             await _dbInfo.RecipiesImages.AddAsync(new RecipiesImage()
             {
@@ -454,7 +453,7 @@ internal class RecipeManager : IRecipeManager
                 continue;
             
             var path = _pathProvider.GetImagePath(newRecipe.Id, image.Name);
-            var imageBytes = _fileProvider.GetFileByPath(path);
+            var imageBytes = _fileProvider.GetFileByPath(image.ImagePath);
             await _fileSaver.SaveFileAsync(path , imageBytes);
             await _dbInfo.RecipiesImages.AddAsync(new RecipiesImage()
             {
@@ -463,6 +462,11 @@ internal class RecipeManager : IRecipeManager
                 ImagePath = path
             });
         }
+        foreach(var ingredient in oryginalRecipe.RecipiesIngredients)
+            newRecipe.RecipiesIngredients.Add(ingredient);
+        foreach(var category in oryginalRecipe.Categories)
+            newRecipe.Categories.Add(category);
+
         await _dbInfo.SaveChangesAsync();
         await transaction.CommitAsync();
         return new ManagerActionResult<int>(newRecipe.Id, ResultEnum.OK);
