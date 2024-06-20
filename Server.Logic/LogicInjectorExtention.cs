@@ -28,7 +28,8 @@ public static class LogicInjectorExtention
             .AddSingleton<IPathProvider, PathProvider>()
             .AddSingleton<IFileSaver, FileSaver>()
             .AddSingleton<IRecipeViewModelFactory, RecipeViewModelFactory>()
-            .AddSingleton<IDatabaseErrorHanlder, DatabaseExceptionHandler>();
+            .AddSingleton<IDatabaseErrorHanlder, DatabaseExceptionHandler>()
+            .AddSingleton<IFileProvider, FileProvider>();
     }
 
     private static IServiceCollection AddManagers(this IServiceCollection injector)

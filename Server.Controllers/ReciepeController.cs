@@ -212,4 +212,12 @@ public class RecipeController : BaseController
         return (await _recipeManager.UpdateRecipeCategoriesAsync(recipeId, user, categoryIds)).MapToActionResult();
     }
 
+    [HttpPost]
+    [Route($"{_controllerRoute}/forkRecipe")]
+    public async Task<IActionResult> ForkRecipe([FromQuery] int recipeId)
+    {
+        var user = GetUser();
+        return (await _recipeManager.ForkRecipeAsync(recipeId, user)).MapToActionResult();
+    }
+
 }

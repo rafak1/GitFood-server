@@ -16,6 +16,7 @@ internal class RecipeManager : IRecipeManager
     private readonly IPathProvider _pathProvider;
     private readonly IFileSaver _fileSaver;
     private readonly IRecipeViewModelFactory _recipeViewModelFactory;
+    private readonly IFileProvider _fileProvider;
     private const string _recipeNotFound = "Recipe not found";
     private const string _categoryNotFound = "Category not found";
     private const string _commentNotFound = "Comment not found";
@@ -23,13 +24,15 @@ internal class RecipeManager : IRecipeManager
     private const string _userDoNotLikeRecipe = "User does not like selected recipe";
 
     public RecipeManager(GitfoodContext database, IPageingManager pageingManager,
-     IPathProvider pathProvider, IFileSaver fileSaver, IRecipeViewModelFactory recipeViewModelFactory)
+     IPathProvider pathProvider, IFileSaver fileSaver,
+     IRecipeViewModelFactory recipeViewModelFactory, IFileProvider fileProvider)
     {
         _dbInfo = database ?? throw new ArgumentNullException(nameof(database));
         _pageingManager = pageingManager ?? throw new ArgumentNullException(nameof(pageingManager));
         _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
         _fileSaver = fileSaver ?? throw new ArgumentNullException(nameof(fileSaver));
         _recipeViewModelFactory = recipeViewModelFactory ?? throw new ArgumentNullException(nameof(recipeViewModelFactory));
+        _fileProvider = fileProvider ?? throw new ArgumentNullException(nameof(fileProvider));
     }
 
     public async Task<IManagerActionResult<int>> CreateRecipeAsync(RecipeViewModel recipe, string user)
@@ -407,6 +410,62 @@ internal class RecipeManager : IRecipeManager
         await _dbInfo.SaveChangesAsync();
         await trans.CommitAsync();
         return new ManagerActionResult(ResultEnum.OK);
+    }
+
+    public async Task<IManagerActionResult<int>> ForkRecipeAsync(int recipeId, string user)
+    {
+        var oryginalRecipe = await _dbInfo.Recipes.FirstOrDefaultAsync(x => x.Id == recipeId);
+        if (oryginalRecipe is null)
+            return new ManagerActionResult<int>(-1, ResultEnum.BadRequest, _recipeNotFound);
+        var newRecipe = new Recipe()
+        {
+            Name = oryginalRecipe.Name,
+            Description = oryginalRecipe.Description,
+            Author = user,
+            RecipiesIngredients = oryginalRecipe.RecipiesIngredients
+        };
+        using var transaction = await _dbInfo.Database.BeginTransactionAsync();
+        await _dbInfo.Recipes.AddAsync(newRecipe);
+        await _dbInfo.SaveChangesAsync();
+
+        newRecipe.MarkdownPath = _pathProvider.GetMarkdownPath(newRecipe.Id);
+        using var reader = new StreamReader(_fileProvider.GetFileByPath(oryginalRecipe.MarkdownPath), Encoding.UTF8);
+        await SaveMarkdownAsync(newRecipe.Id,         reader.ReadToEnd());
+
+        var mainImage = await GetMainImageAsync(oryginalRecipe.Id);
+
+        if (mainImage is not null) 
+        {
+        
+            var path = _pathProvider.GetMainImagePath(newRecipe.Id, mainImage.Name);
+            var imageBytes = _fileProvider.GetFileByPath(path);
+            await _fileSaver.SaveFileAsync(path , imageBytes);
+            await _dbInfo.RecipiesImages.AddAsync(new RecipiesImage()
+            {
+                Recipe = newRecipe.Id,
+                Name = mainImage.Name,
+                ImagePath = path
+            });
+        }
+        
+        foreach(var image in oryginalRecipe.RecipiesImages)
+        {
+            if(image.ImagePath.Contains(_pathProvider.GetMainImagePathPrefix(newRecipe.Id)))
+                continue;
+            
+            var path = _pathProvider.GetImagePath(newRecipe.Id, image.Name);
+            var imageBytes = _fileProvider.GetFileByPath(path);
+            await _fileSaver.SaveFileAsync(path , imageBytes);
+            await _dbInfo.RecipiesImages.AddAsync(new RecipiesImage()
+            {
+                Recipe = newRecipe.Id,
+                Name = image.Name,
+                ImagePath = path
+            });
+        }
+        await _dbInfo.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return new ManagerActionResult<int>(newRecipe.Id, ResultEnum.OK);
     }
 
     private async Task<(int numOfLikes, bool isLiked)> GetNumOfLikesAndIsItLiked(int recipeId, string user)

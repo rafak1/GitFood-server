@@ -27,4 +27,5 @@ public interface IRecipeManager
     public Task<IManagerActionResult<string>> AddOrUpdateMainPhoto(int recipeId, string user, Stream stream, string fileName);
     public Task<IManagerActionResult<RecipeExtendedViewModel>> GetRecipeDetailsAsync(int recipeId, string user);
     public Task<IManagerActionResult> UpdateRecipeCategoriesAsync(int recipeId, string user, int[] categoryIds);
+    public Task<IManagerActionResult<int>> ForkRecipeAsync(int recipeId, string user);
 }
