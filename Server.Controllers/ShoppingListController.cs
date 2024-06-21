@@ -3,6 +3,7 @@ using Server.ViewModels.Fridge;
 using Microsoft.AspNetCore.Authorization;
 using Server.Logic.Abstract.Managers;
 using Server.Logic.Abstract.Token;
+using Server.ViewModels.Recipes;
 
 namespace Server.Controllers;
 
@@ -60,9 +61,9 @@ public class ShoppingListController : BaseController
 
     [HttpPost]
     [Route($"{_controllerRoute}/createByRecipe")]
-    public async Task<IActionResult> CreateShoppingListByRecipe( int recipeId, int[] fridgesId) 
+    public async Task<IActionResult> CreateShoppingListByRecipe( int recipeId, FridgeListViewModel fridges) 
     {
         var user = GetUser();
-        return (await _shoppingListManager.CreateShoppingListByRecipeAsync(recipeId, fridgesId, user)).MapToActionResult();
+        return (await _shoppingListManager.CreateShoppingListByRecipeAsync(recipeId, fridges.fridgeIds, user)).MapToActionResult();
     }
 }
