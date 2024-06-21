@@ -61,7 +61,7 @@ public class ShoppingListController : BaseController
 
     [HttpPost]
     [Route($"{_controllerRoute}/createByRecipe")]
-    public async Task<IActionResult> CreateShoppingListByRecipe( int recipeId, FridgeListViewModel fridges) 
+    public async Task<IActionResult> CreateShoppingListByRecipe([FromQuery] int recipeId, [FromBody] FridgeListViewModel fridges) 
     {
         var user = GetUser();
         return (await _shoppingListManager.CreateShoppingListByRecipeAsync(recipeId, fridges.fridgeIds, user)).MapToActionResult();
