@@ -31,11 +31,12 @@ public class RecipeViewModelFactory : IRecipeViewModelFactory
             Description = recipe.Description,
             Author = recipe.Author,
             MarkdownPath = recipe.MarkdownPath,
-            Ingredients = recipe.RecipiesIngredients.Select(x => new RecipeIngredientViewModel
+            Ingredients = recipe.RecipiesIngredients.Select(x => new RecipeIngredientExtendedViewModel
             {
                 CategoryId = x.Category,
 		        CategoryName = x.CategoryNavigation.Name,
-                Quantity = x.Quantity
+                Quantity = x.Quantity,
+                Units = x.CategoryNavigation.Unit,
             }).ToList(),
             Categories = recipe.Categories.Select(x => x.Id).ToList(),
             ImagePaths = recipe.RecipiesImages.Select(x => x.ImagePath).ToList(),
@@ -54,11 +55,12 @@ public class RecipeViewModelFactory : IRecipeViewModelFactory
             Description = recipe.Description,
             Author = recipe.Author,
             MarkdownPath = recipe.MarkdownPath,
-            Ingredients = recipe.RecipiesIngredients.Select(x => new RecipeIngredientViewModel
+            Ingredients = recipe.RecipiesIngredients.Select(x => new RecipeIngredientExtendedViewModel
             {
                 CategoryId = x.Category,
 		        CategoryName = x.CategoryNavigation.Name,
-                Quantity = x.Quantity
+                Quantity = x.Quantity,
+                Units = x.CategoryNavigation.Unit
             }).ToList(),
             Categories = recipe.Categories.Select(x => x.Id).ToList(),
             Likes = recipe.Users.Select(x => x.Login).ToList(),
